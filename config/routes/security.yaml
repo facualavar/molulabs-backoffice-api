@@ -4,3 +4,6 @@ _security_logout:
 
 api_login:
     path: /api/login
+
+api_refresh_token:
+    path: /api/refresh
