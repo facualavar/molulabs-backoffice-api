@@ -14,7 +14,7 @@
         "lexik/jwt-authentication-bundle": "^3.2",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.11",
         "symfony/framework-bundle": "8.0.*",
         "symfony/password-hasher": "8.0.*",
         "symfony/runtime": "8.0.*",
