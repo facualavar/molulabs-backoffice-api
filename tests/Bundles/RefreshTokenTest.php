@@ -36,7 +36,7 @@ final class RefreshTokenTest extends CustomWebTestCase
 
         $this->postRequest('/api/refresh', ['refresh_token' => $refreshToken->getRefreshToken()]);
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseIsOk();
     }
 
     public function testRefreshTokenFailsWithInvalidToken(): void
@@ -56,6 +56,6 @@ final class RefreshTokenTest extends CustomWebTestCase
 
         $this->postRequest('/api/refresh', ['refresh_token' => $refreshToken->getRefreshToken()]);
 
-        self::assertResponseStatusCodeSame(401);
+        self::assertResponseIsUnauthorized();
     }
 }

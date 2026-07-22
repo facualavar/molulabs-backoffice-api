@@ -42,7 +42,7 @@ final class LoginTest extends CustomWebTestCase
 
         $this->postRequest('/api/login', ['email' => 'admin@company.com', 'password' => 'password']);
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseIsOk();
     }
 
     private function encryptPassword(User $user): void
