@@ -23,6 +23,23 @@ abstract class CustomWebTestCase extends WebTestCase
         $this->client->request('POST', $uri, [], [], $headers, json_encode($data));
     }
 
+    protected function getRequest(string $uri, array $headers = []): void
+    {
+        $this->client->request('GET', $uri, [], [], $headers);
+    }
+
+    protected function putRequest(string $uri, array $data = [], array $headers = []): void
+    {
+        $headers = $this->addHeaderContentType($headers);
+
+        $this->client->request('PUT', $uri, [], [], $headers, json_encode($data));
+    }
+
+    protected function deleteRequest(string $uri, array $headers = []): void
+    {
+        $this->client->request('DELETE', $uri, [], [], $headers);
+    }
+
     private function addHeaderContentType(array $headers): array
     {
         return array_merge($headers, [
@@ -35,9 +52,24 @@ abstract class CustomWebTestCase extends WebTestCase
         return $this->client->getResponse();
     }
 
-    private function getResponseContent()
+    protected function getResponseContent()
     {
         return json_decode($this->getResponseFromClient()->getContent(), true);
+    }
+
+    protected static function assertResponseIsCreated(): void
+    {
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+    }
+
+    protected static function assertResponseIsNoContent(): void
+    {
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+    }
+
+    protected static function assertResponseIsOk(): void
+    {
+        self::assertResponseStatusCodeSame(Response::HTTP_OK);
     }
 
     protected function assertResponseUnauthorizedWithMessage(string $message): void

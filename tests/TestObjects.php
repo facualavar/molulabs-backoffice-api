@@ -2,6 +2,7 @@
 
 namespace App\Tests;
 
+use App\Entity\Company;
 use App\Entity\User;
 
 final class TestObjects
@@ -14,5 +15,10 @@ final class TestObjects
             'admin@company.com',
             'password',
         );
+    }
+
+    public static function getCompany(): Company
+    {
+        return new Company('Acme', 'acme@company.com');
     }
 }

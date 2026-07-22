@@ -2,6 +2,7 @@
 
 namespace App\Tests;
 
+use App\Entity\Company;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -26,5 +27,13 @@ final class PersistedTestObjects
 
         $this->persistAndFlushEntities([$user]);
         return $user;
+    }
+
+    public function getCompany(): Company
+    {
+        $company = TestObjects::getCompany();
+
+        $this->persistAndFlushEntities([$company]);
+        return $company;
     }
 }
