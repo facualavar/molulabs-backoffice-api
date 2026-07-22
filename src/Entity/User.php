@@ -34,12 +34,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    public function __construct(string $firstname, string $lastname, string $email, string $password)
+    #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'users')]
+    #[ORM\JoinColumn(nullable: false)]
+    private Company $company;
+
+    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $password)
     {
         $this->firstname = $firstname;
         $this->lastname = $lastname;
         $this->email = $email;
         $this->password = $password;
+        $this->company = $company;
     }
 
     public function getId(): ?int
@@ -52,14 +57,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->firstname;
     }
 
+    public function setFirstname(string $firstname): void
+    {
+        $this->firstname = $firstname;
+    }
+
     public function getLastname(): ?string
     {
         return $this->lastname;
     }
 
+    public function setLastname(string $lastname): void
+    {
+        $this->lastname = $lastname;
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
+    }
+
+    public function getCompany(): Company
+    {
+        return $this->company;
     }
 
     public function getUserIdentifier(): string

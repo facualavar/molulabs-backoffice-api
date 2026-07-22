@@ -23,7 +23,8 @@ final class PersistedTestObjects
 
     public function getAdminUser(): User
     {
-        $user = TestObjects::getAdminUser();
+        $company = $this->getCompany();
+        $user = TestObjects::getAdminUser($company);
 
         $this->persistAndFlushEntities([$user]);
         return $user;

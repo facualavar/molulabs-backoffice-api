@@ -7,9 +7,10 @@ use App\Entity\User;
 
 final class TestObjects
 {
-    public static function getAdminUser(): User
+    public static function getAdminUser(Company $company): User
     {
         return new User(
+            $company,
             'Admin',
             'Company',
             'admin@company.com',

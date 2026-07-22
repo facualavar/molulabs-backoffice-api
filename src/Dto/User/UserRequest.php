@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Dto\User;
+
+final class UserRequest
+{
+    public function __construct(
+        public readonly string $firstname,
+        public readonly string $lastname,
+        public readonly string $email,
+        public readonly ?string $password = null,
+        public readonly ?int $companyId = null,
+    ) {}
+}
