@@ -6,6 +6,9 @@ security:
             algorithm: 'auto'
             cost:      15
 
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER
+
     providers:
         app_user_provider:
             entity:
