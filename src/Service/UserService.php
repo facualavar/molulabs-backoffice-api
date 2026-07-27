@@ -15,7 +15,7 @@ final class UserService
 
     public function create(Company $company, string $firstname, string $lastname, string $email, string $password, string $role): User
     {
-        $user = new User($company, $firstname, $lastname, $email, $password, [$role]);
+        $user = new User($company, $firstname, $lastname, $email, $password, $role);
         $user->setPassword($this->authService->hashPassword($user, $password));
 
         $this->entityManager->persist($user);

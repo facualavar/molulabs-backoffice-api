@@ -38,14 +38,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(nullable: false)]
     private Company $company;
 
-    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $password, array $roles = [])
+    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $password, string $role = 'ROLE_USER')
     {
         $this->firstname = $firstname;
         $this->lastname = $lastname;
         $this->email = $email;
         $this->password = $password;
         $this->company = $company;
-        $this->roles = $roles;
+        $this->roles = [$role];
     }
 
     public function getId(): ?int

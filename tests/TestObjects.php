@@ -15,7 +15,7 @@ final class TestObjects
             'Company',
             'admin@company.com',
             'password',
-            ['ROLE_ADMIN'],
+            'ROLE_ADMIN',
         );
     }
 
