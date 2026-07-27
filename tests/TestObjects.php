@@ -9,11 +9,25 @@ final class TestObjects
 {
     public static function getAdminUser(Company $company): User
     {
-        return new User(
+        $user = new User(
             $company,
             'Admin',
             'Company',
             'admin@company.com',
+            'password',
+        );
+        $user->setRoles(['ROLE_ADMIN']);
+
+        return $user;
+    }
+
+    public static function getUser(Company $company): User
+    {
+        return new User(
+            $company,
+            'Regular',
+            'User',
+            'user@company.com',
             'password',
         );
     }

@@ -2,6 +2,7 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,6 +39,16 @@ abstract class CustomWebTestCase extends WebTestCase
     protected function deleteRequest(string $uri, array $headers = []): void
     {
         $this->client->request('DELETE', $uri, [], [], $headers);
+    }
+
+    protected function patchRequest(string $uri, array $headers = []): void
+    {
+        $this->client->request('PATCH', $uri, [], [], $headers);
+    }
+
+    protected function loginAs(User $user): void
+    {
+        $this->client->loginUser($user, 'api');
     }
 
     private function addHeaderContentType(array $headers): array
@@ -80,6 +91,11 @@ abstract class CustomWebTestCase extends WebTestCase
     protected static function assertResponseIsUnauthorized(): void
     {
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+    }
+
+    protected static function assertResponseIsForbidden(): void
+    {
+        self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
     }
 
     protected function assertResponseUnauthorizedWithMessage(string $message): void

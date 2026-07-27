@@ -24,6 +24,9 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testListingUsersReturnsSuccessfulResponse(): void
     {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
+
         $this->getRequest('/api/users');
 
         self::assertResponseIsOk();
@@ -32,6 +35,7 @@ final class UserControllerTest extends CustomWebTestCase
     public function testShowingExistingUserReturnsItsData(): void
     {
         $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
 
         $this->getRequest('/api/users/' . $user->getId());
 
@@ -44,8 +48,37 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame($user->getCompany()->getId(), $content['companyId']);
     }
 
+    public function testListingUsersAsRegularUserReturnsForbidden(): void
+    {
+        $user = $this->persistedTestObjects->getUser();
+        $this->loginAs($user);
+
+        $this->getRequest('/api/users');
+
+        self::assertResponseIsForbidden();
+    }
+
+    public function testCreatingUserAsRegularUserReturnsForbidden(): void
+    {
+        $actingUser = $this->persistedTestObjects->getUser();
+        $this->loginAs($actingUser);
+        $company = $this->persistedTestObjects->getCompany();
+
+        $this->postRequest('/api/users', [
+            'firstname' => 'New',
+            'lastname' => 'User',
+            'email' => 'new@company.com',
+            'password' => 'password',
+            'companyId' => $company->getId(),
+        ]);
+
+        self::assertResponseIsForbidden();
+    }
+
     public function testCreatingUserWithValidDataReturnsCreatedUser(): void
     {
+        $actingUser = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($actingUser);
         $company = $this->persistedTestObjects->getCompany();
 
         $this->postRequest('/api/users', [
@@ -67,6 +100,9 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testCreatingUserWithNonExistentCompanyReturnsNotFound(): void
     {
+        $actingUser = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($actingUser);
+
         $this->postRequest('/api/users', [
             'firstname' => 'New',
             'lastname' => 'User',
@@ -81,6 +117,7 @@ final class UserControllerTest extends CustomWebTestCase
     public function testUpdatingExistingUserReturnsUpdatedData(): void
     {
         $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
 
         $this->putRequest('/api/users/' . $user->getId(), [
             'firstname' => 'Updated',
@@ -99,6 +136,7 @@ final class UserControllerTest extends CustomWebTestCase
     public function testDeletingExistingUserReturnsNoContent(): void
     {
         $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
 
         $this->deleteRequest('/api/users/' . $user->getId());
 
