@@ -18,7 +18,7 @@ class AppFixtures extends Fixture
     {
         $company = new Company('Acme', 'acme@company.com');
 
-        $user = new User($company, 'Admin', 'Company', 'admin@company.com', '');
+        $user = new User($company, 'Admin', 'Company', 'admin@company.com', '', ['ROLE_ADMIN']);
         $user->setPassword($this->authService->hashPassword($user, 'password'));
 
         $manager->persist($company);

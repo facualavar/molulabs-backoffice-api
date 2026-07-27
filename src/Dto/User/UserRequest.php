@@ -8,7 +8,8 @@ final class UserRequest
         public readonly string $firstname,
         public readonly string $lastname,
         public readonly string $email,
-        public readonly ?string $password = null,
-        public readonly ?int $companyId = null,
+        public readonly string $password,
+        public readonly int $companyId,
+        public readonly string $role,
     ) {}
 }

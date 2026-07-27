@@ -70,6 +70,7 @@ final class UserControllerTest extends CustomWebTestCase
             'email' => 'new@company.com',
             'password' => 'password',
             'companyId' => $company->getId(),
+            'role' => 'ROLE_USER',
         ]);
 
         self::assertResponseIsForbidden();
@@ -87,6 +88,7 @@ final class UserControllerTest extends CustomWebTestCase
             'email' => 'new@company.com',
             'password' => 'password',
             'companyId' => $company->getId(),
+            'role' => 'ROLE_USER',
         ]);
 
         self::assertResponseIsCreated();
@@ -109,6 +111,7 @@ final class UserControllerTest extends CustomWebTestCase
             'email' => 'new@company.com',
             'password' => 'password',
             'companyId' => 0,
+            'role' => 'ROLE_USER',
         ]);
 
         self::assertResponseIsNotFound();
@@ -123,6 +126,9 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+            'password' => 'password',
+            'companyId' => $user->getCompany()->getId(),
+            'role' => 'ROLE_ADMIN',
         ]);
 
         self::assertResponseIsOk();

@@ -52,7 +52,7 @@ final class UserController extends AbstractController
             throw $this->createNotFoundException('Company ' . $request->companyId . ' not found.');
         }
 
-        $user = $this->userService->create($company, $request->firstname, $request->lastname, $request->email, $request->password);
+        $user = $this->userService->create($company, $request->firstname, $request->lastname, $request->email, $request->password, $request->role);
 
         return $this->json(UserResponse::fromEntity($user), Response::HTTP_CREATED);
     }
@@ -60,7 +60,7 @@ final class UserController extends AbstractController
     #[Route('/{user}', name: 'user_update', methods: ['PUT'])]
     public function update(User $user, #[MapRequestPayload] UserRequest $request): JsonResponse
     {
-        $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email);
+        $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email, $request->role);
 
         return $this->json(UserResponse::fromEntity($user));
     }
