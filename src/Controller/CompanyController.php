@@ -9,6 +9,7 @@ use App\Repository\CompanyRepository;
 use App\Service\CompanyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,11 +24,17 @@ final class CompanyController extends AbstractController
     {}
 
     #[Route('', name: 'company_list', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $name = $request->query->get('name');
+
+        $companies = $name
+            ? $this->companyRepository->findByName($name)
+            : $this->companyRepository->findAll();
+
         $companies = array_map(
             static fn (Company $company) => CompanyResponse::fromEntity($company),
-            $this->companyRepository->findAll(),
+            $companies,
         );
 
         return $this->json($companies);

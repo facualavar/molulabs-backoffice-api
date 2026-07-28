@@ -30,8 +30,8 @@ final class TestObjects
         );
     }
 
-    public static function getCompany(): Company
+    public static function getCompany(string $name = 'Acme'): Company
     {
-        return new Company('Acme', 'acme@company.com');
+        return new Company($name, 'acme@company.com');
     }
 }

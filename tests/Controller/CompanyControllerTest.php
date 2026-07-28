@@ -29,6 +29,32 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
     }
 
+    public function testListingCompaniesFilteredByNameReturnsMatchingCompanies(): void
+    {
+        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp');
+        $this->persistedTestObjects->getCompany('Globex');
+
+        $this->getRequest('/api/companies?name=Acme');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content);
+        self::assertSame($matchingCompany->getId(), $content[0]['id']);
+    }
+
+    public function testListingCompaniesFilteredByNonMatchingNameReturnsEmptyList(): void
+    {
+        $this->persistedTestObjects->getCompany('Acme Corp');
+
+        $this->getRequest('/api/companies?name=Nonexistent');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(0, $content);
+    }
+
     public function testShowingExistingCompanyReturnsItsData(): void
     {
         $company = $this->persistedTestObjects->getCompany();

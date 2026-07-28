@@ -15,4 +15,16 @@ class CompanyRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Company::class);
     }
+
+    /**
+     * @return list<Company>
+     */
+    public function findByName(string $name): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.name LIKE :name')
+            ->setParameter('name', '%' . $name . '%')
+            ->getQuery()
+            ->getResult();
+    }
 }
