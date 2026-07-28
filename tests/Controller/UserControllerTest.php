@@ -48,6 +48,53 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame($user->getCompany()->getId(), $content['companyId']);
     }
 
+    public function testListingUsersFilteredByNameReturnsMatchingUsers(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($admin);
+        $matchingUser = $this->persistedTestObjects->getUser('Wanda');
+        $this->persistedTestObjects->getUser('Bruce');
+
+        $this->getRequest('/api/users?name=Wanda');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content);
+        self::assertSame($matchingUser->getId(), $content[0]['id']);
+    }
+
+    public function testListingUsersRespectsLimit(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($admin);
+        $this->persistedTestObjects->getUser('Wanda');
+        $this->persistedTestObjects->getUser('Bruce');
+
+        $this->getRequest('/api/users?limit=2');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(2, $content);
+    }
+
+    public function testListingUsersRespectsPage(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($admin);
+        $this->persistedTestObjects->getUser('Wanda');
+        $lastUser = $this->persistedTestObjects->getUser('Bruce');
+
+        $this->getRequest('/api/users?page=2&limit=2');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content);
+        self::assertSame($lastUser->getId(), $content[0]['id']);
+    }
+
     public function testListingUsersAsRegularUserReturnsForbidden(): void
     {
         $user = $this->persistedTestObjects->getUser();

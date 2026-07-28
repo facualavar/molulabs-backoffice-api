@@ -30,10 +30,10 @@ final class PersistedTestObjects
         return $user;
     }
 
-    public function getUser(): User
+    public function getUser(string $firstname = 'Regular'): User
     {
         $company = $this->getCompany();
-        $user = TestObjects::getUser($company);
+        $user = TestObjects::getUser($company, $firstname);
 
         $this->persistAndFlushEntities([$user]);
         return $user;

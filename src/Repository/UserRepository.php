@@ -15,4 +15,25 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
     }
+
+    /**
+     * @return list<User>
+     */
+    public function findByFilters(?string $name, int $page, int $limit): array
+    {
+        $queryBuilder = $this->createQueryBuilder('u');
+
+        if ($name) {
+            $queryBuilder
+                ->andWhere('u.firstname LIKE :name OR u.lastname LIKE :name')
+                ->setParameter('name', '%' . $name . '%');
+        }
+
+        return $queryBuilder
+            ->orderBy('u.id', 'ASC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

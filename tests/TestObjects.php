@@ -19,11 +19,11 @@ final class TestObjects
         );
     }
 
-    public static function getUser(Company $company): User
+    public static function getUser(Company $company, string $firstname = 'Regular'): User
     {
         return new User(
             $company,
-            'Regular',
+            $firstname,
             'User',
             'user@company.com',
             'password',

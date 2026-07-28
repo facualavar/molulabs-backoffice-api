@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\User\UserFilterRequest;
 use App\Dto\User\UserRequest;
 use App\Dto\User\UserResponse;
 use App\Entity\User;
@@ -11,6 +12,7 @@ use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -27,11 +29,11 @@ final class UserController extends AbstractController
     {}
 
     #[Route('', name: 'user_list', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(#[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
         $users = array_map(
             static fn (User $user) => UserResponse::fromEntity($user),
-            $this->userRepository->findAll(),
+            $this->userRepository->findByFilters($filter->name, $filter->page, $filter->limit),
         );
 
         return $this->json($users);
