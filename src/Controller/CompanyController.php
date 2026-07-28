@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\Company\CompanyFilterRequest;
 use App\Dto\Company\CompanyRequest;
 use App\Dto\Company\CompanyResponse;
 use App\Entity\Company;
@@ -9,8 +10,8 @@ use App\Repository\CompanyRepository;
 use App\Service\CompanyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -24,17 +25,11 @@ final class CompanyController extends AbstractController
     {}
 
     #[Route('', name: 'company_list', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    public function index(#[MapQueryString] CompanyFilterRequest $filter): JsonResponse
     {
-        $name = $request->query->get('name');
-
-        $companies = $name
-            ? $this->companyRepository->findByName($name)
-            : $this->companyRepository->findAll();
-
         $companies = array_map(
             static fn (Company $company) => CompanyResponse::fromEntity($company),
-            $companies,
+            $this->companyRepository->findByFilters($filter->name, $filter->page, $filter->limit),
         );
 
         return $this->json($companies);

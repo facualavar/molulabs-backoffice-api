@@ -55,6 +55,35 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertCount(0, $content);
     }
 
+    public function testListingCompaniesRespectsLimit(): void
+    {
+        $this->persistedTestObjects->getCompany('Company A');
+        $this->persistedTestObjects->getCompany('Company B');
+        $this->persistedTestObjects->getCompany('Company C');
+
+        $this->getRequest('/api/companies?limit=2');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(2, $content);
+    }
+
+    public function testListingCompaniesRespectsPage(): void
+    {
+        $this->persistedTestObjects->getCompany('Company A');
+        $this->persistedTestObjects->getCompany('Company B');
+        $third = $this->persistedTestObjects->getCompany('Company C');
+
+        $this->getRequest('/api/companies?page=2&limit=2');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content);
+        self::assertSame($third->getId(), $content[0]['id']);
+    }
+
     public function testShowingExistingCompanyReturnsItsData(): void
     {
         $company = $this->persistedTestObjects->getCompany();
