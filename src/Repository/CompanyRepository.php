@@ -41,4 +41,20 @@ class CompanyRepository extends ServiceEntityRepository
 
         return new PaginatedResult($items, $total);
     }
+
+    private const int AUTOCOMPLETE_LIMIT = 5;
+
+    /**
+     * @return list<Company>
+     */
+    public function search(string $name): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.name LIKE :name')
+            ->setParameter('name', '%' . $name . '%')
+            ->orderBy('c.name', 'ASC')
+            ->setMaxResults(self::AUTOCOMPLETE_LIMIT)
+            ->getQuery()
+            ->getResult();
+    }
 }

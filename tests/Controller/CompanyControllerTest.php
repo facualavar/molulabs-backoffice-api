@@ -101,6 +101,54 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame(2, $content['meta']['totalPages']);
     }
 
+    public function testAutocompletingCompaniesWithoutNameReturnsNotFound(): void
+    {
+        $this->getRequest('/api/companies/autocomplete');
+
+        self::assertResponseIsNotFound();
+    }
+
+    public function testAutocompletingCompaniesFilteredByNameReturnsMatchingCompanies(): void
+    {
+        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp');
+        $this->persistedTestObjects->getCompany('Globex');
+
+        $this->getRequest('/api/companies/autocomplete?name=Acme');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content);
+        self::assertSame($matchingCompany->getId(), $content[0]['id']);
+        self::assertSame($matchingCompany->getName(), $content[0]['name']);
+    }
+
+    public function testAutocompletingCompaniesFilteredByNonMatchingNameReturnsEmptyList(): void
+    {
+        $this->persistedTestObjects->getCompany('Acme Corp');
+
+        $this->getRequest('/api/companies/autocomplete?name=Nonexistent');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(0, $content);
+    }
+
+    public function testAutocompletingCompaniesIsCappedAtFiveResults(): void
+    {
+        for ($i = 1; $i <= 7; $i++) {
+            $this->persistedTestObjects->getCompany('Company ' . $i);
+        }
+
+        $this->getRequest('/api/companies/autocomplete?name=Company');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(5, $content);
+    }
+
     public function testShowingExistingCompanyReturnsItsData(): void
     {
         $company = $this->persistedTestObjects->getCompany();

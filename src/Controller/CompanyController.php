@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Dto\Company\CompanyAutocompleteRequest;
+use App\Dto\Company\CompanyAutocompleteResponse;
 use App\Dto\Company\CompanyFilterRequest;
 use App\Dto\Company\CompanyRequest;
 use App\Dto\Company\CompanyResponse;
@@ -35,6 +37,17 @@ final class CompanyController extends AbstractController
             static fn (Company $company) => CompanyResponse::fromEntity($company),
             $filter->page,
             $filter->limit,
+        ));
+    }
+
+    #[Route('/autocomplete', name: 'company_autocomplete', methods: ['GET'])]
+    public function autocomplete(#[MapQueryString] CompanyAutocompleteRequest $filter): JsonResponse
+    {
+        $companies = $this->companyRepository->search($filter->name);
+
+        return $this->json(array_map(
+            static fn (Company $company) => CompanyAutocompleteResponse::fromEntity($company),
+            $companies,
         ));
     }
 
