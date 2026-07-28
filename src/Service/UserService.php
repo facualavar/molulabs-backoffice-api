@@ -36,6 +36,15 @@ final class UserService
         return $user;
     }
 
+    public function updatePassword(User $user, string $password): User
+    {
+        $user->setPassword($this->authService->hashPassword($user, $password));
+
+        $this->entityManager->flush();
+
+        return $user;
+    }
+
     public function delete(User $user): void
     {
         $this->entityManager->remove($user);

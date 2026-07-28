@@ -18,4 +18,9 @@ final class AuthService
             $password
         );
     }
+
+    public function isPasswordValid(User $user, string $password): bool
+    {
+        return $this->passwordHasher->isPasswordValid($user, $password);
+    }
 }

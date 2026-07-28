@@ -2,24 +2,34 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
 use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class ProfileControllerTest extends CustomWebTestCase
 {
     private ?PersistedTestObjects $persistedTestObjects;
+    private ?UserPasswordHasherInterface $passwordHasher;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
         $this->persistedTestObjects = new PersistedTestObjects($entityManager);
     }
 
     protected function tearDown(): void
     {
+        $this->passwordHasher = null;
         $this->persistedTestObjects = null;
         parent::tearDown();
+    }
+
+    private function encryptPassword(User $user): void
+    {
+        $user->setPassword($this->passwordHasher->hashPassword($user, $user->getPassword()));
     }
 
     public function testShowingCurrentUserReturnsAuthenticatedUserData(): void
@@ -98,6 +108,44 @@ final class ProfileControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+        ]);
+
+        self::assertResponseIsUnauthorized();
+    }
+
+    public function testUpdatingPasswordWithCorrectCurrentPasswordReturnsNoContent(): void
+    {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->encryptPassword($user);
+        $this->loginAs($user);
+
+        $this->putRequest('/api/profile/password', [
+            'currentPassword' => 'password',
+            'newPassword' => 'new-password',
+        ]);
+
+        self::assertResponseIsNoContent();
+    }
+
+    public function testUpdatingPasswordWithIncorrectCurrentPasswordReturnsBadRequest(): void
+    {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->encryptPassword($user);
+        $this->loginAs($user);
+
+        $this->putRequest('/api/profile/password', [
+            'currentPassword' => 'wrong-password',
+            'newPassword' => 'new-password',
+        ]);
+
+        self::assertResponseIsBadRequest();
+    }
+
+    public function testUpdatingPasswordWithoutTokenReturnsUnauthorized(): void
+    {
+        $this->putRequest('/api/profile/password', [
+            'currentPassword' => 'password',
+            'newPassword' => 'new-password',
         ]);
 
         self::assertResponseIsUnauthorized();

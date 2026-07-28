@@ -98,6 +98,11 @@ abstract class CustomWebTestCase extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
     }
 
+    protected static function assertResponseIsBadRequest(): void
+    {
+        self::assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+    }
+
     protected function assertResponseUnauthorizedWithMessage(string $message): void
     {
         $this->assertResponseError(Response::HTTP_UNAUTHORIZED, $message);
