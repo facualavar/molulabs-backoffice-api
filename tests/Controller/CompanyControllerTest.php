@@ -39,8 +39,8 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(1, $content);
-        self::assertSame($matchingCompany->getId(), $content[0]['id']);
+        self::assertCount(1, $content['data']);
+        self::assertSame($matchingCompany->getId(), $content['data'][0]['id']);
     }
 
     public function testListingCompaniesFilteredByNonMatchingNameReturnsEmptyList(): void
@@ -52,7 +52,7 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(0, $content);
+        self::assertCount(0, $content['data']);
     }
 
     public function testListingCompaniesRespectsLimit(): void
@@ -66,7 +66,7 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(2, $content);
+        self::assertCount(2, $content['data']);
     }
 
     public function testListingCompaniesRespectsPage(): void
@@ -80,8 +80,25 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(1, $content);
-        self::assertSame($third->getId(), $content[0]['id']);
+        self::assertCount(1, $content['data']);
+        self::assertSame($third->getId(), $content['data'][0]['id']);
+    }
+
+    public function testListingCompaniesReturnsPaginationMeta(): void
+    {
+        $this->persistedTestObjects->getCompany('Company A');
+        $this->persistedTestObjects->getCompany('Company B');
+        $this->persistedTestObjects->getCompany('Company C');
+
+        $this->getRequest('/api/companies?page=2&limit=2');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame(2, $content['meta']['page']);
+        self::assertSame(2, $content['meta']['limit']);
+        self::assertSame(3, $content['meta']['total']);
+        self::assertSame(2, $content['meta']['totalPages']);
     }
 
     public function testShowingExistingCompanyReturnsItsData(): void

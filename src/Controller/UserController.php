@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\Pagination\PaginatedResponse;
 use App\Dto\User\UserFilterRequest;
 use App\Dto\User\UserRequest;
 use App\Dto\User\UserResponse;
@@ -31,12 +32,14 @@ final class UserController extends AbstractController
     #[Route('', name: 'user_list', methods: ['GET'])]
     public function index(#[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
-        $users = array_map(
-            static fn (User $user) => UserResponse::fromEntity($user),
-            $this->userRepository->findByFilters($filter->name, $filter->page, $filter->limit),
-        );
+        $result = $this->userRepository->findByFilters($filter->name, $filter->page, $filter->limit);
 
-        return $this->json($users);
+        return $this->json(PaginatedResponse::fromResult(
+            $result,
+            static fn (User $user) => UserResponse::fromEntity($user),
+            $filter->page,
+            $filter->limit,
+        ));
     }
 
     #[Route('/{user}', name: 'user_show', methods: ['GET'])]

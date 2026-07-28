@@ -60,8 +60,8 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(1, $content);
-        self::assertSame($matchingUser->getId(), $content[0]['id']);
+        self::assertCount(1, $content['data']);
+        self::assertSame($matchingUser->getId(), $content['data'][0]['id']);
     }
 
     public function testListingUsersRespectsLimit(): void
@@ -76,7 +76,7 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(2, $content);
+        self::assertCount(2, $content['data']);
     }
 
     public function testListingUsersRespectsPage(): void
@@ -91,8 +91,26 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertCount(1, $content);
-        self::assertSame($lastUser->getId(), $content[0]['id']);
+        self::assertCount(1, $content['data']);
+        self::assertSame($lastUser->getId(), $content['data'][0]['id']);
+    }
+
+    public function testListingUsersReturnsPaginationMeta(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($admin);
+        $this->persistedTestObjects->getUser('Wanda');
+        $this->persistedTestObjects->getUser('Bruce');
+
+        $this->getRequest('/api/users?page=2&limit=2');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame(2, $content['meta']['page']);
+        self::assertSame(2, $content['meta']['limit']);
+        self::assertSame(3, $content['meta']['total']);
+        self::assertSame(2, $content['meta']['totalPages']);
     }
 
     public function testListingUsersAsRegularUserReturnsForbidden(): void

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Dto\Pagination\PaginatedResult;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -16,10 +17,7 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    /**
-     * @return list<User>
-     */
-    public function findByFilters(?string $name, int $page, int $limit): array
+    public function findByFilters(?string $name, int $page, int $limit): PaginatedResult
     {
         $queryBuilder = $this->createQueryBuilder('u');
 
@@ -29,11 +27,18 @@ class UserRepository extends ServiceEntityRepository
                 ->setParameter('name', '%' . $name . '%');
         }
 
-        return $queryBuilder
+        $total = (int) (clone $queryBuilder)
+            ->select('COUNT(u.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $items = $queryBuilder
             ->orderBy('u.id', 'ASC')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
+        return new PaginatedResult($items, $total);
     }
 }

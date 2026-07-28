@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\Company\CompanyFilterRequest;
 use App\Dto\Company\CompanyRequest;
 use App\Dto\Company\CompanyResponse;
+use App\Dto\Pagination\PaginatedResponse;
 use App\Entity\Company;
 use App\Repository\CompanyRepository;
 use App\Service\CompanyService;
@@ -27,12 +28,14 @@ final class CompanyController extends AbstractController
     #[Route('', name: 'company_list', methods: ['GET'])]
     public function index(#[MapQueryString] CompanyFilterRequest $filter): JsonResponse
     {
-        $companies = array_map(
-            static fn (Company $company) => CompanyResponse::fromEntity($company),
-            $this->companyRepository->findByFilters($filter->name, $filter->page, $filter->limit),
-        );
+        $result = $this->companyRepository->findByFilters($filter->name, $filter->page, $filter->limit);
 
-        return $this->json($companies);
+        return $this->json(PaginatedResponse::fromResult(
+            $result,
+            static fn (Company $company) => CompanyResponse::fromEntity($company),
+            $filter->page,
+            $filter->limit,
+        ));
     }
 
     #[Route('/{company}', name: 'company_show', methods: ['GET'])]
