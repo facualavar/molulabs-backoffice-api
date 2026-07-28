@@ -35,6 +35,9 @@ security:
             refresh_jwt:
                 check_path: api_refresh_token
             entry_point: jwt
+            logout:
+                path: /api/logout
+                invalidate_session: false
 
         dev:
             pattern: ^/(_profiler|_wdt|assets|build)/
