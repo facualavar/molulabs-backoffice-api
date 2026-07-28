@@ -4,6 +4,7 @@ namespace App\Tests;
 
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\UserRole;
 
 final class TestObjects
 {
@@ -15,7 +16,7 @@ final class TestObjects
             'Company',
             'admin@company.com',
             'password',
-            'ROLE_ADMIN',
+            UserRole::ADMIN,
         );
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -38,14 +39,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(nullable: false)]
     private Company $company;
 
-    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $password, string $role = 'ROLE_USER')
+    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $password, UserRole $role = UserRole::USER)
     {
         $this->firstname = $firstname;
         $this->lastname = $lastname;
         $this->email = $email;
         $this->password = $password;
         $this->company = $company;
-        $this->roles = [$role];
+        $this->roles = [$role->value];
     }
 
     public function getId(): ?int
@@ -101,9 +102,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
-    public function setRoles(array $roles): void
+    public function getRole(): UserRole
     {
-        $this->roles = $roles;
+        return UserRole::from($this->roles[0]);
+    }
+
+    public function setRole(UserRole $role): void
+    {
+        $this->roles = [$role->value];
     }
 
     public function getPassword(): ?string

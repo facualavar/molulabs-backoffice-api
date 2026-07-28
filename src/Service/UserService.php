@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\UserRole;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class UserService
@@ -13,7 +14,7 @@ final class UserService
         private AuthService $authService,
     ) {}
 
-    public function create(Company $company, string $firstname, string $lastname, string $email, string $password, string $role): User
+    public function create(Company $company, string $firstname, string $lastname, string $email, string $password, UserRole $role): User
     {
         $user = new User($company, $firstname, $lastname, $email, $password, $role);
         $user->setPassword($this->authService->hashPassword($user, $password));
@@ -24,12 +25,12 @@ final class UserService
         return $user;
     }
 
-    public function update(User $user, string $firstname, string $lastname, string $email, string $role): User
+    public function update(User $user, string $firstname, string $lastname, string $email, UserRole $role): User
     {
         $user->setFirstname($firstname);
         $user->setLastname($lastname);
         $user->setEmail($email);
-        $user->setRoles([$role]);
+        $user->setRole($role);
 
         $this->entityManager->flush();
 

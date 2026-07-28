@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\UserRole;
 use App\Service\AuthService;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -18,7 +19,7 @@ class AppFixtures extends Fixture
     {
         $company = new Company('Acme', 'acme@company.com');
 
-        $user = new User($company, 'Admin', 'Company', 'admin@company.com', '', 'ROLE_ADMIN');
+        $user = new User($company, 'Admin', 'Company', 'admin@company.com', '', UserRole::ADMIN);
         $user->setPassword($this->authService->hashPassword($user, 'password'));
 
         $manager->persist($company);
