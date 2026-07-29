@@ -11,7 +11,7 @@ final class UserRequest
         public readonly string $lastname,
         public readonly string $email,
         public readonly string $password,
-        public readonly int $companyId,
         public readonly UserRole $role,
+        public readonly ?int $companyId = null,
     ) {}
 }

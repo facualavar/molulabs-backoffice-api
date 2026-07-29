@@ -20,6 +20,18 @@ final class TestObjects
         );
     }
 
+    public static function getSuperAdminUser(Company $company): User
+    {
+        return new User(
+            $company,
+            'SuperAdmin',
+            'Company',
+            'superadmin@company.com',
+            'password',
+            UserRole::SUPERADMIN,
+        );
+    }
+
     public static function getUser(Company $company, string $firstname = 'Regular'): User
     {
         return new User(

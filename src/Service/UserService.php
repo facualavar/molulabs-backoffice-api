@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\UserRole;
+use App\Exception\CannotAssignSuperAdminRoleException;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class UserService
@@ -16,6 +17,8 @@ final class UserService
 
     public function create(Company $company, string $firstname, string $lastname, string $email, string $password, UserRole $role): User
     {
+        $this->assertAssignableRole($role);
+
         $user = new User($company, $firstname, $lastname, $email, $password, $role);
         $user->setPassword($this->authService->hashPassword($user, $password));
 
@@ -27,6 +30,8 @@ final class UserService
 
     public function update(User $user, string $firstname, string $lastname, string $email, UserRole $role): User
     {
+        $this->assertAssignableRole($role);
+
         $user->setFirstname($firstname);
         $user->setLastname($lastname);
         $user->setEmail($email);
@@ -50,5 +55,12 @@ final class UserService
     {
         $this->entityManager->remove($user);
         $this->entityManager->flush();
+    }
+
+    private function assertAssignableRole(UserRole $role): void
+    {
+        if ($role === UserRole::SUPERADMIN) {
+            throw new CannotAssignSuperAdminRoleException();
+        }
     }
 }

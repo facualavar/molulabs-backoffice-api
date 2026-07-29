@@ -8,6 +8,7 @@ security:
 
     role_hierarchy:
         ROLE_ADMIN: ROLE_USER
+        ROLE_SUPERADMIN: ROLE_ADMIN
 
     providers:
         app_user_provider:

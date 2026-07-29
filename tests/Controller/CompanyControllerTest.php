@@ -22,15 +22,33 @@ final class CompanyControllerTest extends CustomWebTestCase
         parent::tearDown();
     }
 
+    private function loginAsSuperAdmin(): void
+    {
+        $company = $this->persistedTestObjects->getCompany('SuperAdmin HQ');
+        $this->loginAs($this->persistedTestObjects->getSuperAdminUser($company));
+    }
+
     public function testListingCompaniesReturnsSuccessfulResponse(): void
     {
+        $this->loginAsSuperAdmin();
+
         $this->getRequest('/api/companies');
 
         self::assertResponseIsOk();
     }
 
+    public function testListingCompaniesAsRegularAdminReturnsForbidden(): void
+    {
+        $this->loginAs($this->persistedTestObjects->getAdminUser());
+
+        $this->getRequest('/api/companies');
+
+        self::assertResponseIsForbidden();
+    }
+
     public function testListingCompaniesFilteredByNameReturnsMatchingCompanies(): void
     {
+        $this->loginAsSuperAdmin();
         $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp');
         $this->persistedTestObjects->getCompany('Globex');
 
@@ -45,6 +63,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testListingCompaniesFilteredByNonMatchingNameReturnsEmptyList(): void
     {
+        $this->loginAsSuperAdmin();
         $this->persistedTestObjects->getCompany('Acme Corp');
 
         $this->getRequest('/api/companies?name=Nonexistent');
@@ -57,6 +76,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testListingCompaniesRespectsLimit(): void
     {
+        $this->loginAsSuperAdmin();
         $this->persistedTestObjects->getCompany('Company A');
         $this->persistedTestObjects->getCompany('Company B');
         $this->persistedTestObjects->getCompany('Company C');
@@ -71,11 +91,12 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testListingCompaniesRespectsPage(): void
     {
+        $this->loginAsSuperAdmin();
         $this->persistedTestObjects->getCompany('Company A');
         $this->persistedTestObjects->getCompany('Company B');
         $third = $this->persistedTestObjects->getCompany('Company C');
 
-        $this->getRequest('/api/companies?page=2&limit=2');
+        $this->getRequest('/api/companies?name=Company&page=2&limit=2');
 
         self::assertResponseIsOk();
 
@@ -86,11 +107,12 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testListingCompaniesReturnsPaginationMeta(): void
     {
+        $this->loginAsSuperAdmin();
         $this->persistedTestObjects->getCompany('Company A');
         $this->persistedTestObjects->getCompany('Company B');
         $this->persistedTestObjects->getCompany('Company C');
 
-        $this->getRequest('/api/companies?page=2&limit=2');
+        $this->getRequest('/api/companies?name=Company&page=2&limit=2');
 
         self::assertResponseIsOk();
 
@@ -103,6 +125,8 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testAutocompletingCompaniesWithoutNameReturnsNotFound(): void
     {
+        $this->loginAsSuperAdmin();
+
         $this->getRequest('/api/companies/autocomplete');
 
         self::assertResponseIsNotFound();
@@ -110,6 +134,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testAutocompletingCompaniesFilteredByNameReturnsMatchingCompanies(): void
     {
+        $this->loginAsSuperAdmin();
         $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp');
         $this->persistedTestObjects->getCompany('Globex');
 
@@ -125,6 +150,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testAutocompletingCompaniesFilteredByNonMatchingNameReturnsEmptyList(): void
     {
+        $this->loginAsSuperAdmin();
         $this->persistedTestObjects->getCompany('Acme Corp');
 
         $this->getRequest('/api/companies/autocomplete?name=Nonexistent');
@@ -137,6 +163,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testAutocompletingCompaniesIsCappedAtFiveResults(): void
     {
+        $this->loginAsSuperAdmin();
         for ($i = 1; $i <= 7; $i++) {
             $this->persistedTestObjects->getCompany('Company ' . $i);
         }
@@ -151,6 +178,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testShowingExistingCompanyReturnsItsData(): void
     {
+        $this->loginAsSuperAdmin();
         $company = $this->persistedTestObjects->getCompany();
 
         $this->getRequest('/api/companies/' . $company->getId());
@@ -164,6 +192,8 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testCreatingCompanyWithValidDataReturnsCreatedCompany(): void
     {
+        $this->loginAsSuperAdmin();
+
         $this->postRequest('/api/companies', [
             'name' => 'New Company',
             'email' => 'new@company.com',
@@ -178,6 +208,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     public function testUpdatingExistingCompanyReturnsUpdatedData(): void
     {
+        $this->loginAsSuperAdmin();
         $company = $this->persistedTestObjects->getCompany();
 
         $this->putRequest('/api/companies/' . $company->getId(), [
@@ -192,12 +223,12 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('updated@company.com', $content['email']);
     }
 
-    public function testUpdatingOwnCompanyAsLoggedInUserReturnsUpdatedData(): void
+    public function testUpdatingOwnCompanyAsLoggedInSuperAdminReturnsUpdatedData(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $company = $admin->getCompany();
+        $superAdmin = $this->persistedTestObjects->getSuperAdminUser();
+        $company = $superAdmin->getCompany();
 
-        $this->loginAs($admin);
+        $this->loginAs($superAdmin);
 
         $this->putRequest('/api/companies/' . $company->getId(), [
             'name' => 'Updated Name',
@@ -211,8 +242,22 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('updated@company.com', $content['email']);
     }
 
+    public function testUpdatingCompanyAsRegularAdminReturnsForbidden(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($admin);
+
+        $this->putRequest('/api/companies/' . $admin->getCompany()->getId(), [
+            'name' => 'Updated Name',
+            'email' => 'updated@company.com',
+        ]);
+
+        self::assertResponseIsForbidden();
+    }
+
     public function testDeletingExistingCompanyReturnsNoContent(): void
     {
+        $this->loginAsSuperAdmin();
         $company = $this->persistedTestObjects->getCompany();
 
         $this->deleteRequest('/api/companies/' . $company->getId());
