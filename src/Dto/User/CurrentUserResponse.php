@@ -3,6 +3,7 @@
 namespace App\Dto\User;
 
 use App\Entity\User;
+use App\Enum\UserRole;
 
 final class CurrentUserResponse
 {
@@ -11,6 +12,7 @@ final class CurrentUserResponse
         public readonly string $firstname,
         public readonly string $lastname,
         public readonly string $email,
+        public readonly UserRole $role,
     ) {}
 
     public static function fromEntity(User $user): self
@@ -20,6 +22,7 @@ final class CurrentUserResponse
             $user->getFirstname(),
             $user->getLastname(),
             $user->getEmail(),
+            $user->getRole(),
         );
     }
 }

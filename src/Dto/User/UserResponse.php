@@ -3,6 +3,7 @@
 namespace App\Dto\User;
 
 use App\Entity\User;
+use App\Enum\UserRole;
 
 final class UserResponse
 {
@@ -11,6 +12,7 @@ final class UserResponse
         public readonly string $firstname,
         public readonly string $lastname,
         public readonly string $email,
+        public readonly UserRole $role,
         public readonly int $companyId,
     ) {}
 
@@ -21,6 +23,7 @@ final class UserResponse
             $user->getFirstname(),
             $user->getLastname(),
             $user->getEmail(),
+            $user->getRole(),
             $user->getCompany()->getId(),
         );
     }
