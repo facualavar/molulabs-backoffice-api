@@ -18,4 +18,15 @@ final class CompanySummaryResponse
             $company->getName(),
         );
     }
+
+    /**
+     * @param array{id: int, name: string} $row
+     */
+    public static function fromArray(array $row): self
+    {
+        return new self(
+            $row['id'],
+            $row['name'],
+        );
+    }
 }

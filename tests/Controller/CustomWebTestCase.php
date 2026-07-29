@@ -6,6 +6,7 @@ use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 abstract class CustomWebTestCase extends WebTestCase
 {
@@ -49,6 +50,12 @@ abstract class CustomWebTestCase extends WebTestCase
     protected function loginAs(User $user): void
     {
         $this->client->loginUser($user, 'api');
+    }
+
+    protected function encryptPassword(User $user): void
+    {
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $user->setPassword($passwordHasher->hashPassword($user, $user->getPassword()));
     }
 
     private function addHeaderContentType(array $headers): array

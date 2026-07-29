@@ -28,6 +28,17 @@ final class CompanyControllerTest extends CustomWebTestCase
         $this->loginAs($this->persistedTestObjects->getSuperAdminUser($company));
     }
 
+    private function companyPayload(string $name, string $email, array $overrides = []): array
+    {
+        return array_merge([
+            'name' => $name,
+            'email' => $email,
+            'documentType' => 'CUIT',
+            'documentNumber' => '30-12345678-9',
+            'phone' => '011-4444-5555',
+        ], $overrides);
+    }
+
     public function testListingCompaniesReturnsSuccessfulResponse(): void
     {
         $this->loginAsSuperAdmin();
@@ -197,13 +208,7 @@ final class CompanyControllerTest extends CustomWebTestCase
     {
         $this->loginAsSuperAdmin();
 
-        $this->postRequest('/api/companies', [
-            'name' => 'New Company',
-            'email' => 'new@company.com',
-            'documentType' => 'CUIT',
-            'documentNumber' => '30-12345678-9',
-            'phone' => '011-4444-5555',
-        ]);
+        $this->postRequest('/api/companies', $this->companyPayload('New Company', 'new@company.com'));
 
         self::assertResponseIsCreated();
 
@@ -220,13 +225,11 @@ final class CompanyControllerTest extends CustomWebTestCase
         $this->loginAsSuperAdmin();
         $company = $this->persistedTestObjects->getCompany();
 
-        $this->putRequest('/api/companies/' . $company->getId(), [
-            'name' => 'Updated Name',
-            'email' => 'updated@company.com',
+        $this->putRequest('/api/companies/' . $company->getId(), $this->companyPayload('Updated Name', 'updated@company.com', [
             'documentType' => 'DNI',
             'documentNumber' => '12345678',
             'phone' => '011-5555-4444',
-        ]);
+        ]));
 
         self::assertResponseIsOk();
 
@@ -244,13 +247,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
         $this->loginAs($superAdmin);
 
-        $this->putRequest('/api/companies/' . $company->getId(), [
-            'name' => 'Updated Name',
-            'email' => 'updated@company.com',
-            'documentType' => 'CUIT',
-            'documentNumber' => '30-12345678-9',
-            'phone' => '011-4444-5555',
-        ]);
+        $this->putRequest('/api/companies/' . $company->getId(), $this->companyPayload('Updated Name', 'updated@company.com'));
 
         self::assertResponseIsOk();
 
@@ -264,13 +261,7 @@ final class CompanyControllerTest extends CustomWebTestCase
         $admin = $this->persistedTestObjects->getAdminUser();
         $this->loginAs($admin);
 
-        $this->putRequest('/api/companies/' . $admin->getCompany()->getId(), [
-            'name' => 'Updated Name',
-            'email' => 'updated@company.com',
-            'documentType' => 'CUIT',
-            'documentNumber' => '30-12345678-9',
-            'phone' => '011-4444-5555',
-        ]);
+        $this->putRequest('/api/companies/' . $admin->getCompany()->getId(), $this->companyPayload('Updated Name', 'updated@company.com'));
 
         self::assertResponseIsForbidden();
     }

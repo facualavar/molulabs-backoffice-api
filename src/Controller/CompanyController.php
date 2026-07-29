@@ -46,7 +46,7 @@ final class CompanyController extends AbstractController
         $companies = $this->companyRepository->search($filter->name);
 
         return $this->json(array_map(
-            static fn (Company $company) => CompanySummaryResponse::fromEntity($company),
+            static fn (array $company) => CompanySummaryResponse::fromArray($company),
             $companies,
         ));
     }

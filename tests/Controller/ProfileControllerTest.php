@@ -2,34 +2,35 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\User;
 use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class ProfileControllerTest extends CustomWebTestCase
 {
     private ?PersistedTestObjects $persistedTestObjects;
-    private ?UserPasswordHasherInterface $passwordHasher;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
         $this->persistedTestObjects = new PersistedTestObjects($entityManager);
     }
 
     protected function tearDown(): void
     {
-        $this->passwordHasher = null;
         $this->persistedTestObjects = null;
         parent::tearDown();
     }
 
-    private function encryptPassword(User $user): void
+    private function companyPayload(): array
     {
-        $user->setPassword($this->passwordHasher->hashPassword($user, $user->getPassword()));
+        return [
+            'name' => 'Updated Name',
+            'email' => 'updated@company.com',
+            'documentType' => 'DNI',
+            'documentNumber' => '12345678',
+            'phone' => '011-5555-4444',
+        ];
     }
 
     public function testShowingCurrentUserReturnsAuthenticatedUserData(): void
@@ -191,13 +192,7 @@ final class ProfileControllerTest extends CustomWebTestCase
         $user = $this->persistedTestObjects->getAdminUser();
         $this->loginAs($user);
 
-        $this->putRequest('/api/profile/company', [
-            'name' => 'Updated Name',
-            'email' => 'updated@company.com',
-            'documentType' => 'DNI',
-            'documentNumber' => '12345678',
-            'phone' => '011-5555-4444',
-        ]);
+        $this->putRequest('/api/profile/company', $this->companyPayload());
 
         self::assertResponseIsOk();
 
@@ -213,26 +208,14 @@ final class ProfileControllerTest extends CustomWebTestCase
         $user = $this->persistedTestObjects->getUser();
         $this->loginAs($user);
 
-        $this->putRequest('/api/profile/company', [
-            'name' => 'Updated Name',
-            'email' => 'updated@company.com',
-            'documentType' => 'DNI',
-            'documentNumber' => '12345678',
-            'phone' => '011-5555-4444',
-        ]);
+        $this->putRequest('/api/profile/company', $this->companyPayload());
 
         self::assertResponseIsForbidden();
     }
 
     public function testUpdatingOwnCompanyWithoutTokenReturnsUnauthorized(): void
     {
-        $this->putRequest('/api/profile/company', [
-            'name' => 'Updated Name',
-            'email' => 'updated@company.com',
-            'documentType' => 'DNI',
-            'documentNumber' => '12345678',
-            'phone' => '011-5555-4444',
-        ]);
+        $this->putRequest('/api/profile/company', $this->companyPayload());
 
         self::assertResponseIsUnauthorized();
     }

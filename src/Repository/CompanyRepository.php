@@ -34,7 +34,7 @@ class CompanyRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return list<Company>
+     * @return list<array{id: int, name: string}>
      */
     public function search(string $name): array
     {
@@ -42,10 +42,11 @@ class CompanyRepository extends ServiceEntityRepository
         $this->applyNameFilter($queryBuilder, $name);
 
         return $queryBuilder
+            ->select('c.id', 'c.name')
             ->orderBy('c.name', 'ASC')
             ->setMaxResults(self::AUTOCOMPLETE_LIMIT)
             ->getQuery()
-            ->getResult();
+            ->getArrayResult();
     }
 
     private function applyNameFilter(QueryBuilder $queryBuilder, string $name): void
