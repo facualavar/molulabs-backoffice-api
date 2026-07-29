@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Dto\Pagination\PaginatedResult;
 use App\Entity\Company;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -12,6 +13,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CompanyRepository extends ServiceEntityRepository
 {
+    use PaginatesQueries;
+
+    private const int AUTOCOMPLETE_LIMIT = 5;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Company::class);
@@ -22,39 +27,31 @@ class CompanyRepository extends ServiceEntityRepository
         $queryBuilder = $this->createQueryBuilder('c');
 
         if ($name) {
-            $queryBuilder
-                ->andWhere('c.name LIKE :name')
-                ->setParameter('name', '%' . $name . '%');
+            $this->applyNameFilter($queryBuilder, $name);
         }
 
-        $total = (int) (clone $queryBuilder)
-            ->select('COUNT(c.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $items = $queryBuilder
-            ->orderBy('c.id', 'ASC')
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
-
-        return new PaginatedResult($items, $total);
+        return $this->paginate($queryBuilder, 'c', $page, $limit);
     }
-
-    private const int AUTOCOMPLETE_LIMIT = 5;
 
     /**
      * @return list<Company>
      */
     public function search(string $name): array
     {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.name LIKE :name')
-            ->setParameter('name', '%' . $name . '%')
+        $queryBuilder = $this->createQueryBuilder('c');
+        $this->applyNameFilter($queryBuilder, $name);
+
+        return $queryBuilder
             ->orderBy('c.name', 'ASC')
             ->setMaxResults(self::AUTOCOMPLETE_LIMIT)
             ->getQuery()
             ->getResult();
+    }
+
+    private function applyNameFilter(QueryBuilder $queryBuilder, string $name): void
+    {
+        $queryBuilder
+            ->andWhere('c.name LIKE :name')
+            ->setParameter('name', '%' . $name . '%');
     }
 }

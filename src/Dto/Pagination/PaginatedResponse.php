@@ -15,11 +15,11 @@ final class PaginatedResponse
     /**
      * @param callable(mixed): mixed $mapper
      */
-    public static function fromResult(PaginatedResult $result, callable $mapper, int $page, int $limit): self
+    public static function fromResult(PaginatedResult $result, callable $mapper): self
     {
         return new self(
             array_map($mapper, $result->items),
-            new PaginationMeta($page, $limit, $result->total),
+            new PaginationMeta($result->page, $result->limit, $result->total),
         );
     }
 }

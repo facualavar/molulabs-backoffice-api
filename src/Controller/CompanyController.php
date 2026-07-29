@@ -37,8 +37,6 @@ final class CompanyController extends AbstractController
         return $this->json(PaginatedResponse::fromResult(
             $result,
             static fn (Company $company) => CompanyResponse::fromEntity($company),
-            $filter->page,
-            $filter->limit,
         ));
     }
 

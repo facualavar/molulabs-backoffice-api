@@ -112,6 +112,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->roles = [$role->value];
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->getRole() === UserRole::SUPERADMIN;
+    }
+
     public function getPassword(): ?string
     {
         return $this->password;

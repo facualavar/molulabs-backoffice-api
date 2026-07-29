@@ -3,7 +3,6 @@
 namespace App\Security\Voter;
 
 use App\Entity\User;
-use App\Enum\UserRole;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -32,7 +31,7 @@ final class UserVoter extends Voter
             return false;
         }
 
-        if ($currentUser->getRole() === UserRole::SUPERADMIN) {
+        if ($currentUser->isSuperAdmin()) {
             return true;
         }
 

@@ -35,15 +35,13 @@ final class UserController extends AbstractController
     #[Route('', name: 'user_list', methods: ['GET'])]
     public function index(#[CurrentUser] User $currentUser, #[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
-        $company = $this->isSuperAdmin() ? null : $currentUser->getCompany();
+        $company = $currentUser->isSuperAdmin() ? null : $currentUser->getCompany();
 
         $result = $this->userRepository->findByFilters($company, $filter->name, $filter->page, $filter->limit);
 
         return $this->json(PaginatedResponse::fromResult(
             $result,
             static fn (User $user) => UserResponse::fromEntity($user),
-            $filter->page,
-            $filter->limit,
         ));
     }
 
@@ -57,7 +55,7 @@ final class UserController extends AbstractController
     #[Route('', name: 'user_create', methods: ['POST'])]
     public function create(#[CurrentUser] User $currentUser, #[MapRequestPayload] UserRequest $request): JsonResponse
     {
-        $company = $this->isSuperAdmin()
+        $company = $currentUser->isSuperAdmin()
             ? $this->findCompany($request->companyId)
             : $currentUser->getCompany();
 
@@ -93,10 +91,5 @@ final class UserController extends AbstractController
         }
 
         return $company;
-    }
-
-    private function isSuperAdmin(): bool
-    {
-        return $this->isGranted('ROLE_SUPERADMIN');
     }
 }

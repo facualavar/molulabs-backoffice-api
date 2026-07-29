@@ -13,6 +13,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class UserRepository extends ServiceEntityRepository
 {
+    use PaginatesQueries;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
@@ -34,18 +36,6 @@ class UserRepository extends ServiceEntityRepository
                 ->setParameter('name', '%' . $name . '%');
         }
 
-        $total = (int) (clone $queryBuilder)
-            ->select('COUNT(u.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $items = $queryBuilder
-            ->orderBy('u.id', 'ASC')
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
-
-        return new PaginatedResult($items, $total);
+        return $this->paginate($queryBuilder, 'u', $page, $limit);
     }
 }
