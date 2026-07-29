@@ -3,10 +3,10 @@
 namespace App\Controller;
 
 use App\Dto\Company\CompanyAutocompleteRequest;
-use App\Dto\Company\CompanyAutocompleteResponse;
 use App\Dto\Company\CompanyFilterRequest;
 use App\Dto\Company\CompanyRequest;
 use App\Dto\Company\CompanyResponse;
+use App\Dto\Company\CompanySummaryResponse;
 use App\Dto\Pagination\PaginatedResponse;
 use App\Entity\Company;
 use App\Repository\CompanyRepository;
@@ -46,7 +46,7 @@ final class CompanyController extends AbstractController
         $companies = $this->companyRepository->search($filter->name);
 
         return $this->json(array_map(
-            static fn (Company $company) => CompanyAutocompleteResponse::fromEntity($company),
+            static fn (Company $company) => CompanySummaryResponse::fromEntity($company),
             $companies,
         ));
     }

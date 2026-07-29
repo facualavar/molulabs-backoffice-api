@@ -2,6 +2,7 @@
 
 namespace App\Dto\User;
 
+use App\Dto\Company\CompanySummaryResponse;
 use App\Entity\User;
 use App\Enum\UserRole;
 
@@ -13,7 +14,7 @@ final class UserResponse
         public readonly string $lastname,
         public readonly string $email,
         public readonly UserRole $role,
-        public readonly int $companyId,
+        public readonly CompanySummaryResponse $company,
     ) {}
 
     public static function fromEntity(User $user): self
@@ -24,7 +25,7 @@ final class UserResponse
             $user->getLastname(),
             $user->getEmail(),
             $user->getRole(),
-            $user->getCompany()->getId(),
+            CompanySummaryResponse::fromEntity($user->getCompany()),
         );
     }
 }

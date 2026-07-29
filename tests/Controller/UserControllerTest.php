@@ -45,7 +45,8 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame($user->getFirstname(), $content['firstname']);
         self::assertSame($user->getLastname(), $content['lastname']);
         self::assertSame($user->getEmail(), $content['email']);
-        self::assertSame($user->getCompany()->getId(), $content['companyId']);
+        self::assertSame($user->getCompany()->getId(), $content['company']['id']);
+        self::assertSame($user->getCompany()->getName(), $content['company']['name']);
     }
 
     public function testShowingUserFromAnotherCompanyReturnsNotFound(): void
@@ -84,6 +85,21 @@ final class UserControllerTest extends CustomWebTestCase
         $content = $this->getResponseContent();
         self::assertCount(1, $content['data']);
         self::assertSame($matchingUser->getId(), $content['data'][0]['id']);
+    }
+
+    public function testListingUsersFilteredByRoleReturnsMatchingUsers(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($admin);
+        $regularUser = $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
+
+        $this->getRequest('/api/users?role=ROLE_USER');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content['data']);
+        self::assertSame($regularUser->getId(), $content['data'][0]['id']);
     }
 
     public function testListingUsersRespectsLimit(): void
@@ -212,7 +228,7 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame('New', $content['firstname']);
         self::assertSame('User', $content['lastname']);
         self::assertSame('new@company.com', $content['email']);
-        self::assertSame($actingUser->getCompany()->getId(), $content['companyId']);
+        self::assertSame($actingUser->getCompany()->getId(), $content['company']['id']);
     }
 
     public function testCreatingUserWithSuperAdminRoleReturnsBadRequest(): void
@@ -250,7 +266,7 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertResponseIsCreated();
 
         $content = $this->getResponseContent();
-        self::assertSame($actingUser->getCompany()->getId(), $content['companyId']);
+        self::assertSame($actingUser->getCompany()->getId(), $content['company']['id']);
     }
 
     public function testCreatingUserAsSuperAdminForOtherCompanyReturnsCreatedUser(): void
@@ -271,7 +287,7 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertResponseIsCreated();
 
         $content = $this->getResponseContent();
-        self::assertSame($otherCompany->getId(), $content['companyId']);
+        self::assertSame($otherCompany->getId(), $content['company']['id']);
     }
 
     public function testCreatingUserAsSuperAdminWithNonExistentCompanyReturnsNotFound(): void

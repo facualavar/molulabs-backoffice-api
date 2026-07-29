@@ -46,7 +46,7 @@ final class ProfileControllerTest extends CustomWebTestCase
         self::assertSame($user->getFirstname(), $content['firstname']);
         self::assertSame($user->getLastname(), $content['lastname']);
         self::assertSame($user->getEmail(), $content['email']);
-        self::assertSame($user->getCompany()->getId(), $content['companyId']);
+        self::assertSame($user->getCompany()->getId(), $content['company']['id']);
     }
 
     public function testShowingCurrentUserAsRegularUserReturnsAuthenticatedUserData(): void

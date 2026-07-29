@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Dto\Pagination\PaginatedResult;
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\UserRole;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -20,7 +21,7 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function findByFilters(?Company $company, ?string $name, int $page, int $limit): PaginatedResult
+    public function findByFilters(?Company $company, ?string $name, ?UserRole $role, int $page, int $limit): PaginatedResult
     {
         $queryBuilder = $this->createQueryBuilder('u');
 
@@ -34,6 +35,12 @@ class UserRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('u.firstname LIKE :name OR u.lastname LIKE :name')
                 ->setParameter('name', '%' . $name . '%');
+        }
+
+        if ($role) {
+            $queryBuilder
+                ->andWhere('u.roles = :role')
+                ->setParameter('role', [$role->value], 'jsonb');
         }
 
         return $this->paginate($queryBuilder, 'u', $page, $limit);

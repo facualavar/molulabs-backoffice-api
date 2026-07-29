@@ -4,7 +4,7 @@ namespace App\Dto\Company;
 
 use App\Entity\Company;
 
-final class CompanyAutocompleteResponse
+final class CompanySummaryResponse
 {
     public function __construct(
         public readonly int $id,
