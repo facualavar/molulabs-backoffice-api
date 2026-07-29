@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\DocumentType;
 use App\Enum\UserRole;
 use App\Service\AuthService;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -17,13 +18,26 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        $company = new Company('Acme', 'acme@company.com');
+        $acme = new Company('Acme', 'acme@company.com', DocumentType::CUIT, '30-12345678-9', '011-4444-5555');
+        $globex = new Company('Globex', 'globex@company.com', DocumentType::CUIT, '30-98765432-1', '011-3333-2222');
 
-        $user = new User($company, 'Admin', 'Company', 'admin@company.com', '', UserRole::ADMIN);
-        $user->setPassword($this->authService->hashPassword($user, 'password'));
+        $superAdmin = $this->createUser($acme, 'SuperAdmin', 'Company', 'superadmin@company.com', UserRole::SUPERADMIN);
+        $admin = $this->createUser($acme, 'Admin', 'Company', 'admin@company.com', UserRole::ADMIN);
+        $user = $this->createUser($globex, 'Regular', 'User', 'user@company.com', UserRole::USER);
 
-        $manager->persist($company);
+        $manager->persist($acme);
+        $manager->persist($globex);
+        $manager->persist($superAdmin);
+        $manager->persist($admin);
         $manager->persist($user);
         $manager->flush();
+    }
+
+    private function createUser(Company $company, string $firstname, string $lastname, string $email, UserRole $role): User
+    {
+        $user = new User($company, $firstname, $lastname, $email, '', $role);
+        $user->setPassword($this->authService->hashPassword($user, 'password'));
+
+        return $user;
     }
 }

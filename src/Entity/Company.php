@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\DocumentType;
 use App\Repository\CompanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -22,6 +23,15 @@ class Company
     #[ORM\Column(length: 100)]
     private string $email;
 
+    #[ORM\Column(length: 20, enumType: DocumentType::class)]
+    private DocumentType $documentType;
+
+    #[ORM\Column(length: 50)]
+    private string $documentNumber;
+
+    #[ORM\Column(length: 20)]
+    private string $phone;
+
     #[ORM\Column]
     private readonly \DateTimeImmutable $created_at;
 
@@ -31,10 +41,13 @@ class Company
     #[ORM\OneToMany(mappedBy: 'company', targetEntity: User::class)]
     private Collection $users;
 
-    public function __construct(string $name, string $email)
+    public function __construct(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone)
     {
         $this->name = $name;
         $this->email = $email;
+        $this->documentType = $documentType;
+        $this->documentNumber = $documentNumber;
+        $this->phone = $phone;
         $this->created_at = new \DateTimeImmutable();
         $this->users = new ArrayCollection();
     }
@@ -62,6 +75,36 @@ class Company
     public function setEmail(string $email): void
     {
         $this->email = $email;
+    }
+
+    public function getDocumentType(): DocumentType
+    {
+        return $this->documentType;
+    }
+
+    public function setDocumentType(DocumentType $documentType): void
+    {
+        $this->documentType = $documentType;
+    }
+
+    public function getDocumentNumber(): string
+    {
+        return $this->documentNumber;
+    }
+
+    public function setDocumentNumber(string $documentNumber): void
+    {
+        $this->documentNumber = $documentNumber;
+    }
+
+    public function getPhone(): string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(string $phone): void
+    {
+        $this->phone = $phone;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

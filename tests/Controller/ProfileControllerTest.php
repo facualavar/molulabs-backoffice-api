@@ -150,4 +150,90 @@ final class ProfileControllerTest extends CustomWebTestCase
 
         self::assertResponseIsUnauthorized();
     }
+
+    public function testShowingOwnCompanyReturnsCompanyData(): void
+    {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
+
+        $this->getRequest('/api/profile/company');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame($user->getCompany()->getId(), $content['id']);
+        self::assertSame($user->getCompany()->getName(), $content['name']);
+        self::assertSame($user->getCompany()->getEmail(), $content['email']);
+        self::assertSame($user->getCompany()->getDocumentType()->value, $content['documentType']);
+        self::assertSame($user->getCompany()->getDocumentNumber(), $content['documentNumber']);
+        self::assertSame($user->getCompany()->getPhone(), $content['phone']);
+    }
+
+    public function testShowingOwnCompanyAsRegularUserReturnsForbidden(): void
+    {
+        $user = $this->persistedTestObjects->getUser();
+        $this->loginAs($user);
+
+        $this->getRequest('/api/profile/company');
+
+        self::assertResponseIsForbidden();
+    }
+
+    public function testShowingOwnCompanyWithoutTokenReturnsUnauthorized(): void
+    {
+        $this->getRequest('/api/profile/company');
+
+        self::assertResponseIsUnauthorized();
+    }
+
+    public function testUpdatingOwnCompanyReturnsUpdatedData(): void
+    {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
+
+        $this->putRequest('/api/profile/company', [
+            'name' => 'Updated Name',
+            'email' => 'updated@company.com',
+            'documentType' => 'DNI',
+            'documentNumber' => '12345678',
+            'phone' => '011-5555-4444',
+        ]);
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame('Updated Name', $content['name']);
+        self::assertSame('updated@company.com', $content['email']);
+        self::assertSame('DNI', $content['documentType']);
+        self::assertSame('12345678', $content['documentNumber']);
+    }
+
+    public function testUpdatingOwnCompanyAsRegularUserReturnsForbidden(): void
+    {
+        $user = $this->persistedTestObjects->getUser();
+        $this->loginAs($user);
+
+        $this->putRequest('/api/profile/company', [
+            'name' => 'Updated Name',
+            'email' => 'updated@company.com',
+            'documentType' => 'DNI',
+            'documentNumber' => '12345678',
+            'phone' => '011-5555-4444',
+        ]);
+
+        self::assertResponseIsForbidden();
+    }
+
+    public function testUpdatingOwnCompanyWithoutTokenReturnsUnauthorized(): void
+    {
+        $this->putRequest('/api/profile/company', [
+            'name' => 'Updated Name',
+            'email' => 'updated@company.com',
+            'documentType' => 'DNI',
+            'documentNumber' => '12345678',
+            'phone' => '011-5555-4444',
+        ]);
+
+        self::assertResponseIsUnauthorized();
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Company;
+use App\Enum\DocumentType;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CompanyService
@@ -11,9 +12,9 @@ final class CompanyService
         private EntityManagerInterface $entityManager
     ) {}
 
-    public function create(string $name, string $email): Company
+    public function create(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): Company
     {
-        $company = new Company($name, $email);
+        $company = new Company($name, $email, $documentType, $documentNumber, $phone);
 
         $this->entityManager->persist($company);
         $this->entityManager->flush();
@@ -21,10 +22,13 @@ final class CompanyService
         return $company;
     }
 
-    public function update(Company $company, string $name, string $email): Company
+    public function update(Company $company, string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): Company
     {
         $company->setName($name);
         $company->setEmail($email);
+        $company->setDocumentType($documentType);
+        $company->setDocumentNumber($documentNumber);
+        $company->setPhone($phone);
 
         $this->entityManager->flush();
 

@@ -4,6 +4,7 @@ namespace App\Tests;
 
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\DocumentType;
 use App\Enum\UserRole;
 
 final class TestObjects
@@ -45,6 +46,6 @@ final class TestObjects
 
     public static function getCompany(string $name = 'Acme'): Company
     {
-        return new Company($name, 'acme@company.com');
+        return new Company($name, 'acme@company.com', DocumentType::CUIT, '30-12345678-9', '011-4444-5555');
     }
 }

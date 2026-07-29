@@ -188,6 +188,9 @@ final class CompanyControllerTest extends CustomWebTestCase
         $content = $this->getResponseContent();
         self::assertSame($company->getName(), $content['name']);
         self::assertSame($company->getEmail(), $content['email']);
+        self::assertSame($company->getDocumentType()->value, $content['documentType']);
+        self::assertSame($company->getDocumentNumber(), $content['documentNumber']);
+        self::assertSame($company->getPhone(), $content['phone']);
     }
 
     public function testCreatingCompanyWithValidDataReturnsCreatedCompany(): void
@@ -197,6 +200,9 @@ final class CompanyControllerTest extends CustomWebTestCase
         $this->postRequest('/api/companies', [
             'name' => 'New Company',
             'email' => 'new@company.com',
+            'documentType' => 'CUIT',
+            'documentNumber' => '30-12345678-9',
+            'phone' => '011-4444-5555',
         ]);
 
         self::assertResponseIsCreated();
@@ -204,6 +210,9 @@ final class CompanyControllerTest extends CustomWebTestCase
         $content = $this->getResponseContent();
         self::assertSame('New Company', $content['name']);
         self::assertSame('new@company.com', $content['email']);
+        self::assertSame('CUIT', $content['documentType']);
+        self::assertSame('30-12345678-9', $content['documentNumber']);
+        self::assertSame('011-4444-5555', $content['phone']);
     }
 
     public function testUpdatingExistingCompanyReturnsUpdatedData(): void
@@ -214,6 +223,9 @@ final class CompanyControllerTest extends CustomWebTestCase
         $this->putRequest('/api/companies/' . $company->getId(), [
             'name' => 'Updated Name',
             'email' => 'updated@company.com',
+            'documentType' => 'DNI',
+            'documentNumber' => '12345678',
+            'phone' => '011-5555-4444',
         ]);
 
         self::assertResponseIsOk();
@@ -221,6 +233,8 @@ final class CompanyControllerTest extends CustomWebTestCase
         $content = $this->getResponseContent();
         self::assertSame('Updated Name', $content['name']);
         self::assertSame('updated@company.com', $content['email']);
+        self::assertSame('DNI', $content['documentType']);
+        self::assertSame('12345678', $content['documentNumber']);
     }
 
     public function testUpdatingOwnCompanyAsLoggedInSuperAdminReturnsUpdatedData(): void
@@ -233,6 +247,9 @@ final class CompanyControllerTest extends CustomWebTestCase
         $this->putRequest('/api/companies/' . $company->getId(), [
             'name' => 'Updated Name',
             'email' => 'updated@company.com',
+            'documentType' => 'CUIT',
+            'documentNumber' => '30-12345678-9',
+            'phone' => '011-4444-5555',
         ]);
 
         self::assertResponseIsOk();
@@ -250,6 +267,9 @@ final class CompanyControllerTest extends CustomWebTestCase
         $this->putRequest('/api/companies/' . $admin->getCompany()->getId(), [
             'name' => 'Updated Name',
             'email' => 'updated@company.com',
+            'documentType' => 'CUIT',
+            'documentNumber' => '30-12345678-9',
+            'phone' => '011-4444-5555',
         ]);
 
         self::assertResponseIsForbidden();

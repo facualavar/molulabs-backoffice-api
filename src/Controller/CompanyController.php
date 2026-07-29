@@ -60,7 +60,7 @@ final class CompanyController extends AbstractController
     #[Route('', name: 'company_create', methods: ['POST'])]
     public function create(#[MapRequestPayload] CompanyRequest $request): JsonResponse
     {
-        $company = $this->companyService->create($request->name, $request->email);
+        $company = $this->companyService->create($request->name, $request->email, $request->documentType, $request->documentNumber, $request->phone);
 
         return $this->json(CompanyResponse::fromEntity($company), Response::HTTP_CREATED);
     }
@@ -68,7 +68,7 @@ final class CompanyController extends AbstractController
     #[Route('/{company}', name: 'company_update', methods: ['PUT'])]
     public function update(Company $company, #[MapRequestPayload] CompanyRequest $request): JsonResponse
     {
-        $company = $this->companyService->update($company, $request->name, $request->email);
+        $company = $this->companyService->update($company, $request->name, $request->email, $request->documentType, $request->documentNumber, $request->phone);
 
         return $this->json(CompanyResponse::fromEntity($company));
     }
