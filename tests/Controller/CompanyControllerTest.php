@@ -192,6 +192,25 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('updated@company.com', $content['email']);
     }
 
+    public function testUpdatingOwnCompanyAsLoggedInUserReturnsUpdatedData(): void
+    {
+        $admin = $this->persistedTestObjects->getAdminUser();
+        $company = $admin->getCompany();
+
+        $this->loginAs($admin);
+
+        $this->putRequest('/api/companies/' . $company->getId(), [
+            'name' => 'Updated Name',
+            'email' => 'updated@company.com',
+        ]);
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame('Updated Name', $content['name']);
+        self::assertSame('updated@company.com', $content['email']);
+    }
+
     public function testDeletingExistingCompanyReturnsNoContent(): void
     {
         $company = $this->persistedTestObjects->getCompany();
