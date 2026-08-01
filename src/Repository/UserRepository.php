@@ -7,6 +7,7 @@ use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\UserRole;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -23,7 +24,27 @@ class UserRepository extends ServiceEntityRepository
 
     public function findByFilters(?Company $company, ?string $name, ?UserRole $role, int $page, int $limit): PaginatedResult
     {
-        $queryBuilder = $this->createQueryBuilder('u');
+        $queryBuilder = $this->buildFilteredQuery($company, $name, $role);
+
+        return $this->paginate($queryBuilder, 'u', $page, $limit);
+    }
+
+    /**
+     * @return iterable<User>
+     */
+    public function iterateByFilters(?Company $company, ?string $name, ?UserRole $role): iterable
+    {
+        return $this->buildFilteredQuery($company, $name, $role)
+            ->orderBy('u.id', 'ASC')
+            ->getQuery()
+            ->toIterable();
+    }
+
+    private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('u')
+            ->leftJoin('u.company', 'c')
+            ->addSelect('c');
 
         if ($company) {
             $queryBuilder
@@ -43,6 +64,6 @@ class UserRepository extends ServiceEntityRepository
                 ->setParameter('role', [$role->value], 'jsonb');
         }
 
-        return $this->paginate($queryBuilder, 'u', $page, $limit);
+        return $queryBuilder;
     }
 }

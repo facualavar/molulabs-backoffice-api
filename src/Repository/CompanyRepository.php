@@ -34,6 +34,23 @@ class CompanyRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return iterable<Company>
+     */
+    public function iterateByFilters(?string $name): iterable
+    {
+        $queryBuilder = $this->createQueryBuilder('c');
+
+        if ($name) {
+            $this->applyNameFilter($queryBuilder, $name);
+        }
+
+        return $queryBuilder
+            ->orderBy('c.id', 'ASC')
+            ->getQuery()
+            ->toIterable();
+    }
+
+    /**
      * @return list<array{id: int, name: string}>
      */
     public function search(string $name): array

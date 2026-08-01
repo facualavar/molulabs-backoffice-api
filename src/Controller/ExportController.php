@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Controller;
+
+use App\Dto\Export\ExportJobResponse;
+use App\Entity\ExportJob;
+use App\Enum\ExportStatus;
+use App\Security\Voter\ExportJobVoter;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+#[Route('/exports')]
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
+final class ExportController extends AbstractController
+{
+    #[Route('/{exportJob}', name: 'export_show', methods: ['GET'])]
+    #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: 'Export not found.')]
+    public function show(ExportJob $exportJob): JsonResponse
+    {
+        return $this->json(ExportJobResponse::fromEntity($exportJob));
+    }
+
+    #[Route('/{exportJob}/download', name: 'export_download', methods: ['GET'])]
+    #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: 'Export not found.')]
+    public function download(ExportJob $exportJob): BinaryFileResponse
+    {
+        if ($exportJob->getStatus() !== ExportStatus::READY || !$exportJob->getFilePath()) {
+            throw $this->createNotFoundException('Export is not ready.');
+        }
+
+        $response = new BinaryFileResponse($exportJob->getFilePath(), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            basename($exportJob->getFilePath()),
+        );
+
+        return $response;
+    }
+}

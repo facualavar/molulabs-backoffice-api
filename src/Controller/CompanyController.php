@@ -7,16 +7,21 @@ use App\Dto\Company\CompanyFilterRequest;
 use App\Dto\Company\CompanyRequest;
 use App\Dto\Company\CompanyResponse;
 use App\Dto\Company\CompanySummaryResponse;
+use App\Dto\Export\ExportJobResponse;
 use App\Dto\Pagination\PaginatedResponse;
 use App\Entity\Company;
+use App\Entity\User;
+use App\Enum\ExportType;
 use App\Repository\CompanyRepository;
 use App\Service\CompanyService;
+use App\Service\ExportService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/companies')]
@@ -26,6 +31,7 @@ final class CompanyController extends AbstractController
     public function __construct(
         private CompanyRepository $companyRepository,
         private CompanyService $companyService,
+        private ExportService $exportService,
     )
     {}
 
@@ -49,6 +55,14 @@ final class CompanyController extends AbstractController
             static fn (array $company) => CompanySummaryResponse::fromArray($company),
             $companies,
         ));
+    }
+
+    #[Route('/export', name: 'company_export', methods: ['POST'])]
+    public function export(#[CurrentUser] User $currentUser, #[MapQueryString] CompanyFilterRequest $filter): JsonResponse
+    {
+        $job = $this->exportService->create(ExportType::COMPANIES, ['name' => $filter->name], $currentUser);
+
+        return $this->json(ExportJobResponse::fromEntity($job), Response::HTTP_ACCEPTED);
     }
 
     #[Route('/{company}', name: 'company_show', methods: ['GET'])]

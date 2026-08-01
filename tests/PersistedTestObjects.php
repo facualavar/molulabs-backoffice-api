@@ -3,7 +3,9 @@
 namespace App\Tests;
 
 use App\Entity\Company;
+use App\Entity\ExportJob;
 use App\Entity\User;
+use App\Enum\ExportType;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class PersistedTestObjects
@@ -54,5 +56,13 @@ final class PersistedTestObjects
 
         $this->persistAndFlushEntities([$company]);
         return $company;
+    }
+
+    public function getExportJob(User $requestedBy, ExportType $type = ExportType::USERS): ExportJob
+    {
+        $exportJob = TestObjects::getExportJob($requestedBy, $type);
+
+        $this->persistAndFlushEntities([$exportJob]);
+        return $exportJob;
     }
 }

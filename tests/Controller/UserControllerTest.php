@@ -195,6 +195,28 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertCount(3, $content['data']);
     }
 
+    public function testExportingUsersReturnsAcceptedWithPendingJob(): void
+    {
+        $this->loginAsAdmin();
+
+        $this->postRequest('/api/users/export');
+
+        self::assertResponseIsAccepted();
+
+        $content = $this->getResponseContent();
+        self::assertSame('users', $content['type']);
+        self::assertSame('pending', $content['status']);
+    }
+
+    public function testExportingUsersAsRegularUserReturnsForbidden(): void
+    {
+        $this->loginAsRegularUser();
+
+        $this->postRequest('/api/users/export');
+
+        self::assertResponseIsForbidden();
+    }
+
     public function testListingUsersAsRegularUserReturnsForbidden(): void
     {
         $user = $this->loginAsRegularUser();

@@ -2,15 +2,18 @@
 
 namespace App\Controller;
 
+use App\Dto\Export\ExportJobResponse;
 use App\Dto\Pagination\PaginatedResponse;
 use App\Dto\User\UserFilterRequest;
 use App\Dto\User\UserRequest;
 use App\Dto\User\UserResponse;
 use App\Entity\Company;
 use App\Entity\User;
+use App\Enum\ExportType;
 use App\Repository\CompanyRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\UserVoter;
+use App\Service\ExportService;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,6 +32,7 @@ final class UserController extends AbstractController
         private UserRepository $userRepository,
         private CompanyRepository $companyRepository,
         private UserService $userService,
+        private ExportService $exportService,
     )
     {}
 
@@ -43,6 +47,20 @@ final class UserController extends AbstractController
             $result,
             static fn (User $user) => UserResponse::fromEntity($user),
         ));
+    }
+
+    #[Route('/export', name: 'user_export', methods: ['POST'])]
+    public function export(#[CurrentUser] User $currentUser, #[MapQueryString] UserFilterRequest $filter): JsonResponse
+    {
+        $companyId = $currentUser->isSuperAdmin() ? null : $currentUser->getCompany()->getId();
+
+        $job = $this->exportService->create(ExportType::USERS, [
+            'name' => $filter->name,
+            'role' => $filter->role?->value,
+            'companyId' => $companyId,
+        ], $currentUser);
+
+        return $this->json(ExportJobResponse::fromEntity($job), Response::HTTP_ACCEPTED);
     }
 
     #[Route('/{user}', name: 'user_show', methods: ['GET'])]

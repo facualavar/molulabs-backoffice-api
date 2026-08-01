@@ -134,6 +134,28 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame(2, $content['meta']['totalPages']);
     }
 
+    public function testExportingCompaniesReturnsAcceptedWithPendingJob(): void
+    {
+        $this->loginAsSuperAdmin();
+
+        $this->postRequest('/api/companies/export');
+
+        self::assertResponseIsAccepted();
+
+        $content = $this->getResponseContent();
+        self::assertSame('companies', $content['type']);
+        self::assertSame('pending', $content['status']);
+    }
+
+    public function testExportingCompaniesAsRegularAdminReturnsForbidden(): void
+    {
+        $this->loginAs($this->persistedTestObjects->getAdminUser());
+
+        $this->postRequest('/api/companies/export');
+
+        self::assertResponseIsForbidden();
+    }
+
     public function testAutocompletingCompaniesWithoutNameReturnsNotFound(): void
     {
         $this->loginAsSuperAdmin();

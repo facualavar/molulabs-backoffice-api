@@ -80,6 +80,11 @@ abstract class CustomWebTestCase extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
     }
 
+    protected static function assertResponseIsAccepted(): void
+    {
+        self::assertResponseStatusCodeSame(Response::HTTP_ACCEPTED);
+    }
+
     protected static function assertResponseIsNoContent(): void
     {
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
