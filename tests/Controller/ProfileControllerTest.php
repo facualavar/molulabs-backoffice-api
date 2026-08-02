@@ -90,6 +90,24 @@ final class ProfileControllerTest extends CustomWebTestCase
         self::assertSame('updated@company.com', $content['email']);
     }
 
+    public function testUpdatingOwnProfileAsSuperAdminReturnsUpdatedData(): void
+    {
+        $user = $this->persistedTestObjects->getSuperAdminUser();
+        $this->loginAs($user);
+
+        $this->putRequest('/api/profile', [
+            'firstname' => 'Updated',
+            'lastname' => 'Name',
+            'email' => 'updated@company.com',
+            'documentNumber' => '99999999',
+        ]);
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame('Updated', $content['firstname']);
+    }
+
     public function testUpdatingOwnProfileAsRegularUserReturnsUpdatedData(): void
     {
         $user = $this->persistedTestObjects->getUser();

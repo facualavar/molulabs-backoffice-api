@@ -30,7 +30,9 @@ final class UserService
 
     public function update(User $user, string $firstname, string $lastname, string $email, string $documentNumber, UserRole $role): User
     {
-        $this->assertAssignableRole($role);
+        if ($role !== $user->getRole()) {
+            $this->assertAssignableRole($role);
+        }
 
         $user->setFirstname($firstname);
         $user->setLastname($lastname);

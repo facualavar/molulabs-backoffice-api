@@ -10,6 +10,6 @@ final class CannotAssignSuperAdminRoleException extends \DomainException
 {
     public function __construct()
     {
-        parent::__construct('Role ROLE_SUPERADMIN cannot be assigned.');
+        parent::__construct('El rol Superadmin no puede ser asignado.');
     }
 }
