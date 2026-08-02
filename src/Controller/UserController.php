@@ -10,6 +10,7 @@ use App\Dto\User\UserResponse;
 use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\ExportType;
+use App\Exception\CompanyNotFoundException;
 use App\Repository\CompanyRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\UserVoter;
@@ -105,7 +106,7 @@ final class UserController extends AbstractController
         $company = $companyId ? $this->companyRepository->find($companyId) : null;
 
         if (!$company) {
-            throw $this->createNotFoundException('Company ' . $companyId . ' not found.');
+            throw new CompanyNotFoundException($companyId);
         }
 
         return $company;

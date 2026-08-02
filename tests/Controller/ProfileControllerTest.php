@@ -160,6 +160,9 @@ final class ProfileControllerTest extends CustomWebTestCase
         ]);
 
         self::assertResponseIsBadRequest();
+
+        $content = $this->getResponseContent();
+        self::assertSame('currentPassword', $content['errors'][0]['field']);
     }
 
     public function testUpdatingPasswordWithoutTokenReturnsUnauthorized(): void

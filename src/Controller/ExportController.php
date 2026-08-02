@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\Export\ExportJobResponse;
 use App\Entity\ExportJob;
 use App\Enum\ExportStatus;
+use App\Exception\ExportNotReadyException;
 use App\Security\Voter\ExportJobVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -29,7 +30,7 @@ final class ExportController extends AbstractController
     public function download(ExportJob $exportJob): BinaryFileResponse
     {
         if ($exportJob->getStatus() !== ExportStatus::READY || !$exportJob->getFilePath()) {
-            throw $this->createNotFoundException('Export is not ready.');
+            throw new ExportNotReadyException();
         }
 
         $response = new BinaryFileResponse($exportJob->getFilePath(), 200, [
