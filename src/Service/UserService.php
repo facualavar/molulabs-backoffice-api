@@ -6,6 +6,8 @@ use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\UserRole;
 use App\Exception\CannotAssignSuperAdminRoleException;
+use App\Exception\DuplicateDocumentNumberException;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class UserService
@@ -13,6 +15,7 @@ final class UserService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private AuthService $authService,
+        private UserRepository $userRepository,
     ) {}
 
     public function create(Company $company, string $firstname, string $lastname, string $email, string $documentNumber, string $password, UserRole $role): User
@@ -21,6 +24,8 @@ final class UserService
 
         $user = new User($company, $firstname, $lastname, $email, $documentNumber, $password, $role);
         $user->setPassword($this->authService->hashPassword($user, $password));
+
+        $this->assertDocumentNumberIsUnique($user);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -39,6 +44,8 @@ final class UserService
         $user->setEmail($email);
         $user->setDocumentNumber($documentNumber);
         $user->setRole($role);
+
+        $this->assertDocumentNumberIsUnique($user);
 
         $this->entityManager->flush();
 
@@ -64,6 +71,15 @@ final class UserService
     {
         if ($role === UserRole::SUPERADMIN) {
             throw new CannotAssignSuperAdminRoleException();
+        }
+    }
+
+    private function assertDocumentNumberIsUnique(User $user): void
+    {
+        $existing = $this->userRepository->findOneByDocumentNumber($user->getDocumentNumber());
+
+        if ($existing && $existing->getId() !== $user->getId()) {
+            throw new DuplicateDocumentNumberException($user->getDocumentNumber());
         }
     }
 }

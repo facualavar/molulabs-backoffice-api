@@ -293,6 +293,26 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame($actingUser->getCompany()->getId(), $content['company']['id']);
     }
 
+    public function testCreatingUserWithDuplicateDocumentNumberReturnsConflict(): void
+    {
+        $actingUser = $this->loginAsAdmin();
+        $existingUser = $this->persistedTestObjects->getUser('Wanda', $actingUser->getCompany());
+
+        $this->postRequest('/api/users', [
+            'firstname' => 'New',
+            'lastname' => 'User',
+            'email' => 'new@company.com',
+            'documentNumber' => $existingUser->getDocumentNumber(),
+            'password' => 'password',
+            'role' => 'ROLE_USER',
+        ]);
+
+        self::assertResponseIsConflict();
+
+        $content = $this->getResponseContent();
+        self::assertSame('documentNumber', $content['errors'][0]['field']);
+    }
+
     public function testCreatingUserWithSuperAdminRoleReturnsBadRequest(): void
     {
         $superAdmin = $this->loginAsSuperAdmin();

@@ -270,6 +270,21 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('011-4444-5555', $content['phone']);
     }
 
+    public function testCreatingCompanyWithDuplicateDocumentNumberReturnsConflict(): void
+    {
+        $this->loginAsSuperAdmin();
+        $existingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '30-12345678-1');
+
+        $this->postRequest('/api/companies', $this->companyPayload('New Company', 'new@company.com', [
+            'documentNumber' => $existingCompany->getDocumentNumber(),
+        ]));
+
+        self::assertResponseIsConflict();
+
+        $content = $this->getResponseContent();
+        self::assertSame('documentNumber', $content['errors'][0]['field']);
+    }
+
     public function testUpdatingExistingCompanyReturnsUpdatedData(): void
     {
         $this->loginAsSuperAdmin();

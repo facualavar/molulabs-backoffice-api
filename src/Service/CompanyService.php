@@ -4,17 +4,22 @@ namespace App\Service;
 
 use App\Entity\Company;
 use App\Enum\DocumentType;
+use App\Exception\DuplicateDocumentNumberException;
+use App\Repository\CompanyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CompanyService
 {
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private CompanyRepository $companyRepository,
     ) {}
 
     public function create(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): Company
     {
         $company = new Company($name, $email, $documentType, $documentNumber, $phone);
+
+        $this->assertDocumentNumberIsUnique($company);
 
         $this->entityManager->persist($company);
         $this->entityManager->flush();
@@ -29,6 +34,8 @@ final class CompanyService
         $company->setDocument($documentType, $documentNumber);
         $company->setPhone($phone);
 
+        $this->assertDocumentNumberIsUnique($company);
+
         $this->entityManager->flush();
 
         return $company;
@@ -38,5 +45,14 @@ final class CompanyService
     {
         $this->entityManager->remove($company);
         $this->entityManager->flush();
+    }
+
+    private function assertDocumentNumberIsUnique(Company $company): void
+    {
+        $existing = $this->companyRepository->findOneByDocumentNumber($company->getDocumentNumber());
+
+        if ($existing && $existing->getId() !== $company->getId()) {
+            throw new DuplicateDocumentNumberException($company->getDocumentNumber());
+        }
     }
 }

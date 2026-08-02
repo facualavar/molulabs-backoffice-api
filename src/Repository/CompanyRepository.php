@@ -54,6 +54,15 @@ class CompanyRepository extends ServiceEntityRepository
             ->toIterable();
     }
 
+    public function findOneByDocumentNumber(string $documentNumber): ?Company
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.document.number = :documentNumber')
+            ->setParameter('documentNumber', $documentNumber)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return list<array{id: int, name: string}>
      */

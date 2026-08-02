@@ -23,7 +23,7 @@ final class PersistedTestObjects
         $this->entityManager->flush();
     }
 
-    public function getAdminUser(?Company $company = null, string $documentNumber = '11111111'): User
+    public function getAdminUser(?Company $company = null, ?string $documentNumber = null): User
     {
         $company ??= $this->getCompany();
         $user = TestObjects::getAdminUser($company, $documentNumber);
@@ -32,7 +32,7 @@ final class PersistedTestObjects
         return $user;
     }
 
-    public function getSuperAdminUser(?Company $company = null, string $documentNumber = '22222222'): User
+    public function getSuperAdminUser(?Company $company = null, ?string $documentNumber = null): User
     {
         $company ??= $this->getCompany();
         $user = TestObjects::getSuperAdminUser($company, $documentNumber);
@@ -41,7 +41,7 @@ final class PersistedTestObjects
         return $user;
     }
 
-    public function getUser(string $firstname = 'Regular', ?Company $company = null, string $documentNumber = '33333333'): User
+    public function getUser(string $firstname = 'Regular', ?Company $company = null, ?string $documentNumber = null): User
     {
         $company ??= $this->getCompany();
         $user = TestObjects::getUser($company, $firstname, $documentNumber);
@@ -50,7 +50,7 @@ final class PersistedTestObjects
         return $user;
     }
 
-    public function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-1'): Company
+    public function getCompany(string $name = 'Acme', ?string $documentNumber = null): Company
     {
         $company = TestObjects::getCompany($name, $documentNumber);
 

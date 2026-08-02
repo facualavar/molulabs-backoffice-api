@@ -40,6 +40,15 @@ class UserRepository extends ServiceEntityRepository
             ->toIterable();
     }
 
+    public function findOneByDocumentNumber(string $documentNumber): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.document.number = :documentNumber')
+            ->setParameter('documentNumber', $documentNumber)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('u')
