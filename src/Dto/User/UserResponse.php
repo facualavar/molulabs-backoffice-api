@@ -13,6 +13,7 @@ final class UserResponse
         public readonly string $firstname,
         public readonly string $lastname,
         public readonly string $email,
+        public readonly string $documentNumber,
         public readonly UserRole $role,
         public readonly CompanySummaryResponse $company,
     ) {}
@@ -24,6 +25,7 @@ final class UserResponse
             $user->getFirstname(),
             $user->getLastname(),
             $user->getEmail(),
+            $user->getDocumentNumber(),
             $user->getRole(),
             CompanySummaryResponse::fromEntity($user->getCompany()),
         );

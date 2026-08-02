@@ -77,7 +77,7 @@ final class UserController extends AbstractController
             ? $this->findCompany($request->companyId)
             : $currentUser->getCompany();
 
-        $user = $this->userService->create($company, $request->firstname, $request->lastname, $request->email, $request->password, $request->role);
+        $user = $this->userService->create($company, $request->firstname, $request->lastname, $request->email, $request->documentNumber, $request->password, $request->role);
 
         return $this->json(UserResponse::fromEntity($user), Response::HTTP_CREATED);
     }
@@ -86,7 +86,7 @@ final class UserController extends AbstractController
     #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: 'User not found.')]
     public function update(User $user, #[MapRequestPayload] UserRequest $request): JsonResponse
     {
-        $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email, $request->role);
+        $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email, $request->documentNumber, $request->role);
 
         return $this->json(UserResponse::fromEntity($user));
     }

@@ -35,15 +35,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    #[ORM\Column(length: 50)]
+    private string $documentNumber;
+
     #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'users', fetch: 'EAGER')]
     #[ORM\JoinColumn(nullable: false)]
     private Company $company;
 
-    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $password, UserRole $role = UserRole::USER)
+    public function __construct(Company $company, string $firstname, string $lastname, string $email, string $documentNumber, string $password, UserRole $role = UserRole::USER)
     {
         $this->firstname = $firstname;
         $this->lastname = $lastname;
         $this->email = $email;
+        $this->documentNumber = $documentNumber;
         $this->password = $password;
         $this->company = $company;
         $this->roles = [$role->value];
@@ -82,6 +86,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): void
     {
         $this->email = $email;
+    }
+
+    public function getDocumentNumber(): string
+    {
+        return $this->documentNumber;
+    }
+
+    public function setDocumentNumber(string $documentNumber): void
+    {
+        $this->documentNumber = $documentNumber;
     }
 
     public function getCompany(): Company

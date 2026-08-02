@@ -11,37 +11,40 @@ use App\Enum\UserRole;
 
 final class TestObjects
 {
-    public static function getAdminUser(Company $company): User
+    public static function getAdminUser(Company $company, string $documentNumber = '11111111'): User
     {
         return new User(
             $company,
             'Admin',
             'Company',
             'admin@company.com',
+            $documentNumber,
             'password',
             UserRole::ADMIN,
         );
     }
 
-    public static function getSuperAdminUser(Company $company): User
+    public static function getSuperAdminUser(Company $company, string $documentNumber = '22222222'): User
     {
         return new User(
             $company,
             'SuperAdmin',
             'Company',
             'superadmin@company.com',
+            $documentNumber,
             'password',
             UserRole::SUPERADMIN,
         );
     }
 
-    public static function getUser(Company $company, string $firstname = 'Regular'): User
+    public static function getUser(Company $company, string $firstname = 'Regular', string $documentNumber = '33333333'): User
     {
         return new User(
             $company,
             $firstname,
             'User',
             'user@company.com',
+            $documentNumber,
             'password',
         );
     }

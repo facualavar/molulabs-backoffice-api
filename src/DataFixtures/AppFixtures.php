@@ -21,9 +21,9 @@ class AppFixtures extends Fixture
         $acme = new Company('Acme', 'acme@company.com', DocumentType::CUIT, '30-12345678-9', '011-4444-5555');
         $globex = new Company('Globex', 'globex@company.com', DocumentType::CUIT, '30-98765432-1', '011-3333-2222');
 
-        $superAdmin = $this->createUser($acme, 'SuperAdmin', 'Company', 'superadmin@company.com', UserRole::SUPERADMIN);
-        $admin = $this->createUser($acme, 'Admin', 'Company', 'admin@company.com', UserRole::ADMIN);
-        $user = $this->createUser($globex, 'Regular', 'User', 'user@company.com', UserRole::USER);
+        $superAdmin = $this->createUser($acme, 'SuperAdmin', 'Company', 'superadmin@company.com', '11111111', UserRole::SUPERADMIN);
+        $admin = $this->createUser($acme, 'Admin', 'Company', 'admin@company.com', '22222222', UserRole::ADMIN);
+        $user = $this->createUser($globex, 'Regular', 'User', 'user@company.com', '33333333', UserRole::USER);
 
         $manager->persist($acme);
         $manager->persist($globex);
@@ -33,9 +33,9 @@ class AppFixtures extends Fixture
         $manager->flush();
     }
 
-    private function createUser(Company $company, string $firstname, string $lastname, string $email, UserRole $role): User
+    private function createUser(Company $company, string $firstname, string $lastname, string $email, string $documentNumber, UserRole $role): User
     {
-        $user = new User($company, $firstname, $lastname, $email, '', $role);
+        $user = new User($company, $firstname, $lastname, $email, $documentNumber, '', $role);
         $user->setPassword($this->authService->hashPassword($user, 'password'));
 
         return $user;

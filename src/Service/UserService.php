@@ -15,11 +15,11 @@ final class UserService
         private AuthService $authService,
     ) {}
 
-    public function create(Company $company, string $firstname, string $lastname, string $email, string $password, UserRole $role): User
+    public function create(Company $company, string $firstname, string $lastname, string $email, string $documentNumber, string $password, UserRole $role): User
     {
         $this->assertAssignableRole($role);
 
-        $user = new User($company, $firstname, $lastname, $email, $password, $role);
+        $user = new User($company, $firstname, $lastname, $email, $documentNumber, $password, $role);
         $user->setPassword($this->authService->hashPassword($user, $password));
 
         $this->entityManager->persist($user);
@@ -28,13 +28,14 @@ final class UserService
         return $user;
     }
 
-    public function update(User $user, string $firstname, string $lastname, string $email, UserRole $role): User
+    public function update(User $user, string $firstname, string $lastname, string $email, string $documentNumber, UserRole $role): User
     {
         $this->assertAssignableRole($role);
 
         $user->setFirstname($firstname);
         $user->setLastname($lastname);
         $user->setEmail($email);
+        $user->setDocumentNumber($documentNumber);
         $user->setRole($role);
 
         $this->entityManager->flush();

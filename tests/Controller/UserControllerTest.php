@@ -282,6 +282,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'New',
             'lastname' => 'User',
             'email' => 'new@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'role' => 'ROLE_USER',
         ]);
@@ -303,6 +304,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'New',
             'lastname' => 'User',
             'email' => 'new@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'companyId' => $superAdmin->getCompany()->getId(),
             'role' => 'ROLE_SUPERADMIN',
@@ -320,6 +322,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'New',
             'lastname' => 'User',
             'email' => 'new@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'companyId' => $otherCompany->getId(),
             'role' => 'ROLE_USER',
@@ -340,6 +343,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'New',
             'lastname' => 'User',
             'email' => 'new@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'companyId' => $otherCompany->getId(),
             'role' => 'ROLE_USER',
@@ -359,6 +363,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'New',
             'lastname' => 'User',
             'email' => 'new@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'companyId' => 0,
             'role' => 'ROLE_USER',
@@ -375,6 +380,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'role' => 'ROLE_ADMIN',
         ]);
@@ -396,6 +402,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'role' => 'ROLE_USER',
         ]);
@@ -412,6 +419,7 @@ final class UserControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+            'documentNumber' => '99999999',
             'password' => 'password',
             'role' => 'ROLE_USER',
         ]);

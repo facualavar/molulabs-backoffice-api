@@ -23,28 +23,28 @@ final class PersistedTestObjects
         $this->entityManager->flush();
     }
 
-    public function getAdminUser(?Company $company = null): User
+    public function getAdminUser(?Company $company = null, string $documentNumber = '11111111'): User
     {
         $company ??= $this->getCompany();
-        $user = TestObjects::getAdminUser($company);
+        $user = TestObjects::getAdminUser($company, $documentNumber);
 
         $this->persistAndFlushEntities([$user]);
         return $user;
     }
 
-    public function getSuperAdminUser(?Company $company = null): User
+    public function getSuperAdminUser(?Company $company = null, string $documentNumber = '22222222'): User
     {
         $company ??= $this->getCompany();
-        $user = TestObjects::getSuperAdminUser($company);
+        $user = TestObjects::getSuperAdminUser($company, $documentNumber);
 
         $this->persistAndFlushEntities([$user]);
         return $user;
     }
 
-    public function getUser(string $firstname = 'Regular', ?Company $company = null): User
+    public function getUser(string $firstname = 'Regular', ?Company $company = null, string $documentNumber = '33333333'): User
     {
         $company ??= $this->getCompany();
-        $user = TestObjects::getUser($company, $firstname);
+        $user = TestObjects::getUser($company, $firstname, $documentNumber);
 
         $this->persistAndFlushEntities([$user]);
         return $user;

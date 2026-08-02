@@ -79,6 +79,7 @@ final class ProfileControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+            'documentNumber' => '99999999',
         ]);
 
         self::assertResponseIsOk();
@@ -98,6 +99,7 @@ final class ProfileControllerTest extends CustomWebTestCase
             'firstname' => 'Updated',
             'lastname' => 'Name',
             'email' => 'updated@company.com',
+            'documentNumber' => '99999999',
         ]);
 
         self::assertResponseIsOk();

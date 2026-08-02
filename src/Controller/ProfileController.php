@@ -40,7 +40,7 @@ final class ProfileController extends AbstractController
     #[Route('', name: 'profile_update', methods: ['PUT'])]
     public function update(#[CurrentUser] User $user, #[MapRequestPayload] ProfileRequest $request): JsonResponse
     {
-        $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email, $user->getRole());
+        $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email, $request->documentNumber, $user->getRole());
 
         return $this->json(UserResponse::fromEntity($user));
     }
