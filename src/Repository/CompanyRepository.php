@@ -22,12 +22,16 @@ class CompanyRepository extends ServiceEntityRepository
         parent::__construct($registry, Company::class);
     }
 
-    public function findByFilters(?string $name, int $page, int $limit): PaginatedResult
+    public function findByFilters(?string $name, ?string $documentNumber, int $page, int $limit): PaginatedResult
     {
         $queryBuilder = $this->createQueryBuilder('c');
 
         if ($name) {
             $this->applyNameFilter($queryBuilder, $name);
+        }
+
+        if ($documentNumber) {
+            $this->applyDocumentNumberFilter($queryBuilder, $documentNumber);
         }
 
         return $this->paginate($queryBuilder, 'c', $page, $limit);
@@ -71,5 +75,12 @@ class CompanyRepository extends ServiceEntityRepository
         $queryBuilder
             ->andWhere('c.name LIKE :name')
             ->setParameter('name', '%' . $name . '%');
+    }
+
+    private function applyDocumentNumberFilter(QueryBuilder $queryBuilder, string $documentNumber): void
+    {
+        $queryBuilder
+            ->andWhere('c.documentNumber LIKE :documentNumber')
+            ->setParameter('documentNumber', '%' . $documentNumber . '%');
     }
 }

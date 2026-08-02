@@ -38,7 +38,7 @@ final class CompanyController extends AbstractController
     #[Route('', name: 'company_list', methods: ['GET'])]
     public function index(#[MapQueryString] CompanyFilterRequest $filter): JsonResponse
     {
-        $result = $this->companyRepository->findByFilters($filter->name, $filter->page, $filter->limit);
+        $result = $this->companyRepository->findByFilters($filter->name, $filter->documentNumber, $filter->page, $filter->limit);
 
         return $this->json(PaginatedResponse::fromResult(
             $result,

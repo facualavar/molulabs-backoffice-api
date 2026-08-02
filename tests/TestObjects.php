@@ -46,9 +46,9 @@ final class TestObjects
         );
     }
 
-    public static function getCompany(string $name = 'Acme'): Company
+    public static function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-9'): Company
     {
-        return new Company($name, 'acme@company.com', DocumentType::CUIT, '30-12345678-9', '011-4444-5555');
+        return new Company($name, 'acme@company.com', DocumentType::CUIT, $documentNumber, '011-4444-5555');
     }
 
     public static function getExportJob(User $requestedBy, ExportType $type = ExportType::USERS): ExportJob

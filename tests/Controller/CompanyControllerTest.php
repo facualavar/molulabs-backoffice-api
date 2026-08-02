@@ -85,6 +85,34 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertCount(0, $content['data']);
     }
 
+    public function testListingCompaniesFilteredByDocumentNumberReturnsMatchingCompanies(): void
+    {
+        $this->loginAsSuperAdmin();
+        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-5');
+        $this->persistedTestObjects->getCompany('Globex', '30-98765432-1');
+
+        $this->getRequest('/api/companies?documentNumber=11223344');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content['data']);
+        self::assertSame($matchingCompany->getId(), $content['data'][0]['id']);
+    }
+
+    public function testListingCompaniesFilteredByNonMatchingDocumentNumberReturnsEmptyList(): void
+    {
+        $this->loginAsSuperAdmin();
+        $this->persistedTestObjects->getCompany('Acme Corp', '30-12345678-9');
+
+        $this->getRequest('/api/companies?documentNumber=00000000');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(0, $content['data']);
+    }
+
     public function testListingCompaniesRespectsLimit(): void
     {
         $this->loginAsSuperAdmin();

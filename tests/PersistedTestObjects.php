@@ -50,9 +50,9 @@ final class PersistedTestObjects
         return $user;
     }
 
-    public function getCompany(string $name = 'Acme'): Company
+    public function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-9'): Company
     {
-        $company = TestObjects::getCompany($name);
+        $company = TestObjects::getCompany($name, $documentNumber);
 
         $this->persistAndFlushEntities([$company]);
         return $company;
