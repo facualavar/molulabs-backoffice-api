@@ -26,66 +26,60 @@ final class ExportControllerTest extends CustomWebTestCase
 
     public function testShowingOwnExportJobReturnsData(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($admin);
-        $this->loginAs($admin);
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
+        $this->loginAs($scenario->admin);
 
-        $this->getRequest('/api/exports/' . $exportJob->getId());
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId());
 
         self::assertResponseIsOk();
 
         $content = $this->getResponseContent();
-        self::assertSame($exportJob->getId(), $content['id']);
+        self::assertSame($scenario->exportJob->getId(), $content['id']);
         self::assertSame('users', $content['type']);
         self::assertSame('pending', $content['status']);
     }
 
     public function testShowingExportJobOwnedByAnotherUserReturnsNotFound(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $otherUser = $this->persistedTestObjects->getUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($otherUser);
-        $this->loginAs($admin);
+        $scenario = $this->persistedTestObjects->adminWithAnotherUsersExportJob();
+        $this->loginAs($scenario->admin);
 
-        $this->getRequest('/api/exports/' . $exportJob->getId());
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId());
 
         self::assertResponseIsNotFound();
     }
 
     public function testShowingExportJobWithoutTokenReturnsUnauthorized(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($admin);
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
 
-        $this->getRequest('/api/exports/' . $exportJob->getId());
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId());
 
         self::assertResponseIsUnauthorized();
     }
 
     public function testDownloadingPendingExportJobReturnsNotFound(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($admin);
-        $this->loginAs($admin);
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
+        $this->loginAs($scenario->admin);
 
-        $this->getRequest('/api/exports/' . $exportJob->getId() . '/download');
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId() . '/download');
 
         self::assertResponseIsNotFound();
     }
 
     public function testDownloadingReadyExportJobReturnsFile(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($admin);
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
 
         $filePath = tempnam(sys_get_temp_dir(), 'export_test_');
         file_put_contents($filePath, 'fake xlsx content');
-        $exportJob->markAsReady($filePath);
+        $scenario->exportJob->markAsReady($filePath);
         $this->entityManager->flush();
 
-        $this->loginAs($admin);
+        $this->loginAs($scenario->admin);
 
-        $this->getRequest('/api/exports/' . $exportJob->getId() . '/download');
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId() . '/download');
 
         self::assertResponseIsOk();
         self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=' . basename($filePath));
@@ -95,12 +89,10 @@ final class ExportControllerTest extends CustomWebTestCase
 
     public function testDownloadingExportJobOwnedByAnotherUserReturnsNotFound(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $otherUser = $this->persistedTestObjects->getUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($otherUser);
-        $this->loginAs($admin);
+        $scenario = $this->persistedTestObjects->adminWithAnotherUsersExportJob();
+        $this->loginAs($scenario->admin);
 
-        $this->getRequest('/api/exports/' . $exportJob->getId() . '/download');
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId() . '/download');
 
         self::assertResponseIsNotFound();
     }

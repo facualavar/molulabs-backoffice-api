@@ -29,33 +29,30 @@ final class ExportMessageHandlerTest extends KernelTestCase
 
     public function testHandlingUsersExportMarksJobAsReadyAndWritesFile(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
-        $exportJob = $this->persistedTestObjects->getExportJob($admin, ExportType::USERS);
+        $scenario = $this->persistedTestObjects->adminWithExportJobAndCompanyMate(ExportType::USERS);
 
         $handler = static::getContainer()->get(ExportMessageHandler::class);
-        $handler(new ExportMessage($exportJob->getId()));
+        $handler(new ExportMessage($scenario->exportJob->getId()));
 
-        self::assertSame(ExportStatus::READY, $exportJob->getStatus());
-        self::assertNotNull($exportJob->getFilePath());
-        self::assertFileExists($exportJob->getFilePath());
+        self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
+        self::assertNotNull($scenario->exportJob->getFilePath());
+        self::assertFileExists($scenario->exportJob->getFilePath());
 
-        unlink($exportJob->getFilePath());
+        unlink($scenario->exportJob->getFilePath());
     }
 
     public function testHandlingCompaniesExportMarksJobAsReadyAndWritesFile(): void
     {
-        $admin = $this->persistedTestObjects->getAdminUser();
-        $exportJob = $this->persistedTestObjects->getExportJob($admin, ExportType::COMPANIES);
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::COMPANIES);
 
         $handler = static::getContainer()->get(ExportMessageHandler::class);
-        $handler(new ExportMessage($exportJob->getId()));
+        $handler(new ExportMessage($scenario->exportJob->getId()));
 
-        self::assertSame(ExportStatus::READY, $exportJob->getStatus());
-        self::assertNotNull($exportJob->getFilePath());
-        self::assertFileExists($exportJob->getFilePath());
+        self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
+        self::assertNotNull($scenario->exportJob->getFilePath());
+        self::assertFileExists($scenario->exportJob->getFilePath());
 
-        unlink($exportJob->getFilePath());
+        unlink($scenario->exportJob->getFilePath());
     }
 
     public function testHandlingMessageForNonExistentJobDoesNothing(): void

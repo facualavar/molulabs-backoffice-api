@@ -24,8 +24,7 @@ final class CompanyControllerTest extends CustomWebTestCase
 
     private function loginAsSuperAdmin(): void
     {
-        $company = $this->persistedTestObjects->getCompany('SuperAdmin HQ');
-        $this->loginAs($this->persistedTestObjects->getSuperAdminUser($company));
+        $this->loginAs($this->persistedTestObjects->getSuperAdminUser());
     }
 
     private function companyPayload(string $name, string $email, array $overrides = []): array
@@ -60,8 +59,10 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesFilteredByNameReturnsMatchingCompanies(): void
     {
         $this->loginAsSuperAdmin();
-        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp');
-        $this->persistedTestObjects->getCompany('Globex');
+        [$matchingCompany] = $this->persistedTestObjects->companies([
+            ['name' => 'Acme Corp'],
+            ['name' => 'Globex'],
+        ]);
 
         $this->getRequest('/api/companies?name=Acme');
 
@@ -88,8 +89,10 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesFilteredByDocumentNumberReturnsMatchingCompanies(): void
     {
         $this->loginAsSuperAdmin();
-        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-0');
-        $this->persistedTestObjects->getCompany('Globex', '30-98765432-1');
+        [$matchingCompany] = $this->persistedTestObjects->companies([
+            ['name' => 'Acme Corp', 'documentNumber' => '20-11223344-0'],
+            ['name' => 'Globex', 'documentNumber' => '30-98765432-1'],
+        ]);
 
         $this->getRequest('/api/companies?documentNumber=11223344');
 
@@ -116,9 +119,11 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesRespectsLimit(): void
     {
         $this->loginAsSuperAdmin();
-        $this->persistedTestObjects->getCompany('Company A');
-        $this->persistedTestObjects->getCompany('Company B');
-        $this->persistedTestObjects->getCompany('Company C');
+        $this->persistedTestObjects->companies([
+            ['name' => 'Company A'],
+            ['name' => 'Company B'],
+            ['name' => 'Company C'],
+        ]);
 
         $this->getRequest('/api/companies?limit=2');
 
@@ -131,9 +136,11 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesRespectsPage(): void
     {
         $this->loginAsSuperAdmin();
-        $this->persistedTestObjects->getCompany('Company A');
-        $this->persistedTestObjects->getCompany('Company B');
-        $third = $this->persistedTestObjects->getCompany('Company C');
+        [, , $third] = $this->persistedTestObjects->companies([
+            ['name' => 'Company A'],
+            ['name' => 'Company B'],
+            ['name' => 'Company C'],
+        ]);
 
         $this->getRequest('/api/companies?name=Company&page=2&limit=2');
 
@@ -147,9 +154,11 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesReturnsPaginationMeta(): void
     {
         $this->loginAsSuperAdmin();
-        $this->persistedTestObjects->getCompany('Company A');
-        $this->persistedTestObjects->getCompany('Company B');
-        $this->persistedTestObjects->getCompany('Company C');
+        $this->persistedTestObjects->companies([
+            ['name' => 'Company A'],
+            ['name' => 'Company B'],
+            ['name' => 'Company C'],
+        ]);
 
         $this->getRequest('/api/companies?name=Company&page=2&limit=2');
 
@@ -196,8 +205,10 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testAutocompletingCompaniesFilteredByNameReturnsMatchingCompanies(): void
     {
         $this->loginAsSuperAdmin();
-        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp');
-        $this->persistedTestObjects->getCompany('Globex');
+        [$matchingCompany] = $this->persistedTestObjects->companies([
+            ['name' => 'Acme Corp'],
+            ['name' => 'Globex'],
+        ]);
 
         $this->getRequest('/api/companies/autocomplete?name=Acme');
 
@@ -225,9 +236,9 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testAutocompletingCompaniesIsCappedAtFiveResults(): void
     {
         $this->loginAsSuperAdmin();
-        for ($i = 1; $i <= 7; $i++) {
-            $this->persistedTestObjects->getCompany('Company ' . $i);
-        }
+        $this->persistedTestObjects->companies(
+            array_map(static fn (int $i) => ['name' => 'Company ' . $i], range(1, 7)),
+        );
 
         $this->getRequest('/api/companies/autocomplete?name=Company');
 

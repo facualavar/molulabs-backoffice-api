@@ -3,9 +3,9 @@
 namespace App\Tests;
 
 use App\Entity\Company;
-use App\Entity\ExportJob;
 use App\Entity\User;
 use App\Enum\ExportType;
+use App\Tests\Scenario\AdminExportJobScenario;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class PersistedTestObjects
@@ -23,30 +23,118 @@ final class PersistedTestObjects
         $this->entityManager->flush();
     }
 
-    public function getAdminUser(?Company $company = null, ?string $documentNumber = null): User
+    /**
+     * @param list<array{name: string, documentNumber?: string}> $specs
+     * @return list<Company>
+     */
+    public function companies(array $specs): array
     {
-        $company ??= $this->getCompany();
-        $user = TestObjects::getAdminUser($company, $documentNumber);
+        $companies = array_map(
+            fn (array $spec) => TestObjects::getCompany($spec['name'], $spec['documentNumber'] ?? null),
+            $specs,
+        );
 
-        $this->persistAndFlushEntities([$user]);
+        $this->persistAndFlushEntities($companies);
+
+        return $companies;
+    }
+
+    /**
+     * @param list<array{firstname?: string, company?: Company, documentNumber?: string}> $specs
+     * @return list<User>
+     */
+    public function users(array $specs): array
+    {
+        $entities = [];
+        $users = [];
+
+        foreach ($specs as $spec) {
+            $company = $spec['company'] ?? null;
+
+            if (!$company) {
+                $company = TestObjects::getCompany();
+                $entities[] = $company;
+            }
+
+            $user = TestObjects::getUser($company, $spec['firstname'] ?? 'Regular', $spec['documentNumber'] ?? null);
+            $entities[] = $user;
+            $users[] = $user;
+        }
+
+        $this->persistAndFlushEntities($entities);
+
+        return $users;
+    }
+
+    public function adminWithOwnExportJob(ExportType $type = ExportType::USERS): AdminExportJobScenario
+    {
+        $company = TestObjects::getCompany();
+        $admin = TestObjects::getAdminUser($company);
+        $exportJob = TestObjects::getExportJob($admin, $type);
+
+        $this->persistAndFlushEntities([$company, $admin, $exportJob]);
+
+        return new AdminExportJobScenario($admin, $exportJob);
+    }
+
+    public function adminWithAnotherUsersExportJob(): AdminExportJobScenario
+    {
+        $adminCompany = TestObjects::getCompany();
+        $admin = TestObjects::getAdminUser($adminCompany);
+
+        $otherCompany = TestObjects::getCompany();
+        $otherUser = TestObjects::getUser($otherCompany);
+
+        $exportJob = TestObjects::getExportJob($otherUser);
+
+        $this->persistAndFlushEntities([$adminCompany, $admin, $otherCompany, $otherUser, $exportJob]);
+
+        return new AdminExportJobScenario($admin, $exportJob);
+    }
+
+    public function adminWithExportJobAndCompanyMate(ExportType $type = ExportType::USERS): AdminExportJobScenario
+    {
+        $company = TestObjects::getCompany();
+        $admin = TestObjects::getAdminUser($company);
+        $mate = TestObjects::getUser($company, 'Wanda');
+        $exportJob = TestObjects::getExportJob($admin, $type);
+
+        $this->persistAndFlushEntities([$company, $admin, $mate, $exportJob]);
+
+        return new AdminExportJobScenario($admin, $exportJob);
+    }
+
+    public function getAdminUser(): User
+    {
+        $company = TestObjects::getCompany();
+        $user = TestObjects::getAdminUser($company);
+
+        $this->persistAndFlushEntities([$company, $user]);
         return $user;
     }
 
-    public function getSuperAdminUser(?Company $company = null, ?string $documentNumber = null): User
+    public function getSuperAdminUser(): User
     {
-        $company ??= $this->getCompany();
-        $user = TestObjects::getSuperAdminUser($company, $documentNumber);
+        $company = TestObjects::getCompany('SuperAdmin HQ');
+        $user = TestObjects::getSuperAdminUser($company);
 
-        $this->persistAndFlushEntities([$user]);
+        $this->persistAndFlushEntities([$company, $user]);
         return $user;
     }
 
     public function getUser(string $firstname = 'Regular', ?Company $company = null, ?string $documentNumber = null): User
     {
-        $company ??= $this->getCompany();
-        $user = TestObjects::getUser($company, $firstname, $documentNumber);
+        $entities = [];
 
-        $this->persistAndFlushEntities([$user]);
+        if (!$company) {
+            $company = TestObjects::getCompany();
+            $entities[] = $company;
+        }
+
+        $user = TestObjects::getUser($company, $firstname, $documentNumber);
+        $entities[] = $user;
+
+        $this->persistAndFlushEntities($entities);
         return $user;
     }
 
@@ -56,13 +144,5 @@ final class PersistedTestObjects
 
         $this->persistAndFlushEntities([$company]);
         return $company;
-    }
-
-    public function getExportJob(User $requestedBy, ExportType $type = ExportType::USERS): ExportJob
-    {
-        $exportJob = TestObjects::getExportJob($requestedBy, $type);
-
-        $this->persistAndFlushEntities([$exportJob]);
-        return $exportJob;
     }
 }

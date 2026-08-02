@@ -49,7 +49,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testListingUsersReturnsSuccessfulResponse(): void
     {
-        $user = $this->loginAsAdmin();
+        $this->loginAsAdmin();
 
         $this->getRequest('/api/users');
 
@@ -74,7 +74,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testShowingUserFromAnotherCompanyReturnsNotFound(): void
     {
-        $admin = $this->loginAsAdmin();
+        $this->loginAsAdmin();
         $otherCompanyUser = $this->persistedTestObjects->getUser();
 
         $this->getRequest('/api/users/' . $otherCompanyUser->getId());
@@ -84,7 +84,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testShowingUserFromAnotherCompanyAsSuperAdminReturnsItsData(): void
     {
-        $superAdmin = $this->loginAsSuperAdmin();
+        $this->loginAsSuperAdmin();
         $otherCompanyUser = $this->persistedTestObjects->getUser();
 
         $this->getRequest('/api/users/' . $otherCompanyUser->getId());
@@ -95,8 +95,10 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersFilteredByNameReturnsMatchingUsers(): void
     {
         $admin = $this->loginAsAdmin();
-        $matchingUser = $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
-        $this->persistedTestObjects->getUser('Bruce', $admin->getCompany());
+        [$matchingUser] = $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'company' => $admin->getCompany()],
+            ['firstname' => 'Bruce', 'company' => $admin->getCompany()],
+        ]);
 
         $this->getRequest('/api/users?name=Wanda');
 
@@ -124,8 +126,10 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersFilteredByDocumentNumberReturnsMatchingUsers(): void
     {
         $this->loginAsSuperAdmin();
-        $matchingUser = $this->persistedTestObjects->getUser('Wanda', null, '11223344');
-        $this->persistedTestObjects->getUser('Bruce', null, '44332211');
+        [$matchingUser] = $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'documentNumber' => '11223344'],
+            ['firstname' => 'Bruce', 'documentNumber' => '44332211'],
+        ]);
 
         $this->getRequest('/api/users?documentNumber=11223344');
 
@@ -152,8 +156,10 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersRespectsLimit(): void
     {
         $admin = $this->loginAsAdmin();
-        $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
-        $this->persistedTestObjects->getUser('Bruce', $admin->getCompany());
+        $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'company' => $admin->getCompany()],
+            ['firstname' => 'Bruce', 'company' => $admin->getCompany()],
+        ]);
 
         $this->getRequest('/api/users?limit=2');
 
@@ -166,8 +172,10 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersRespectsPage(): void
     {
         $admin = $this->loginAsAdmin();
-        $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
-        $lastUser = $this->persistedTestObjects->getUser('Bruce', $admin->getCompany());
+        [, $lastUser] = $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'company' => $admin->getCompany()],
+            ['firstname' => 'Bruce', 'company' => $admin->getCompany()],
+        ]);
 
         $this->getRequest('/api/users?page=2&limit=2');
 
@@ -181,8 +189,10 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersReturnsPaginationMeta(): void
     {
         $admin = $this->loginAsAdmin();
-        $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
-        $this->persistedTestObjects->getUser('Bruce', $admin->getCompany());
+        $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'company' => $admin->getCompany()],
+            ['firstname' => 'Bruce', 'company' => $admin->getCompany()],
+        ]);
 
         $this->getRequest('/api/users?page=2&limit=2');
 
@@ -198,8 +208,10 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersOnlyReturnsUsersFromOwnCompany(): void
     {
         $admin = $this->loginAsAdmin();
-        $this->persistedTestObjects->getUser('Wanda', $admin->getCompany());
-        $this->persistedTestObjects->getUser('Bruce');
+        $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'company' => $admin->getCompany()],
+            ['firstname' => 'Bruce'],
+        ]);
 
         $this->getRequest('/api/users?limit=20');
 
@@ -211,9 +223,11 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testListingUsersAsSuperAdminReturnsUsersFromAllCompanies(): void
     {
-        $superAdmin = $this->loginAsSuperAdmin();
-        $this->persistedTestObjects->getUser('Wanda');
-        $this->persistedTestObjects->getUser('Bruce');
+        $this->loginAsSuperAdmin();
+        $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda'],
+            ['firstname' => 'Bruce'],
+        ]);
 
         $this->getRequest('/api/users?limit=20');
 
@@ -247,7 +261,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testListingUsersAsRegularUserReturnsForbidden(): void
     {
-        $user = $this->loginAsRegularUser();
+        $this->loginAsRegularUser();
 
         $this->getRequest('/api/users');
 
@@ -256,7 +270,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testCreatingUserAsRegularUserReturnsForbidden(): void
     {
-        $actingUser = $this->loginAsRegularUser();
+        $this->loginAsRegularUser();
         $company = $this->persistedTestObjects->getCompany();
 
         $this->postRequest('/api/users', [
@@ -353,7 +367,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testCreatingUserAsSuperAdminForOtherCompanyReturnsCreatedUser(): void
     {
-        $superAdmin = $this->loginAsSuperAdmin();
+        $this->loginAsSuperAdmin();
         $otherCompany = $this->persistedTestObjects->getCompany();
 
         $this->postRequest('/api/users', [
@@ -374,7 +388,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testCreatingUserAsSuperAdminWithNonExistentCompanyReturnsNotFound(): void
     {
-        $superAdmin = $this->loginAsSuperAdmin();
+        $this->loginAsSuperAdmin();
 
         $this->postRequest('/api/users', [
             'firstname' => 'New',
@@ -412,7 +426,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testUpdatingUserFromAnotherCompanyReturnsNotFound(): void
     {
-        $admin = $this->loginAsAdmin();
+        $this->loginAsAdmin();
         $otherCompanyUser = $this->persistedTestObjects->getUser();
 
         $this->putRequest('/api/users/' . $otherCompanyUser->getId(), [
@@ -429,7 +443,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testUpdatingUserFromAnotherCompanyAsSuperAdminReturnsUpdatedData(): void
     {
-        $superAdmin = $this->loginAsSuperAdmin();
+        $this->loginAsSuperAdmin();
         $otherCompanyUser = $this->persistedTestObjects->getUser();
 
         $this->putRequest('/api/users/' . $otherCompanyUser->getId(), [
@@ -455,7 +469,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testDeletingUserFromAnotherCompanyReturnsNotFound(): void
     {
-        $admin = $this->loginAsAdmin();
+        $this->loginAsAdmin();
         $otherCompanyUser = $this->persistedTestObjects->getUser();
 
         $this->deleteRequest('/api/users/' . $otherCompanyUser->getId());
@@ -465,7 +479,7 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testDeletingUserFromAnotherCompanyAsSuperAdminReturnsNoContent(): void
     {
-        $superAdmin = $this->loginAsSuperAdmin();
+        $this->loginAsSuperAdmin();
         $otherCompanyUser = $this->persistedTestObjects->getUser();
 
         $this->deleteRequest('/api/users/' . $otherCompanyUser->getId());
