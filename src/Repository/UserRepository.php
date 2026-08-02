@@ -66,7 +66,7 @@ class UserRepository extends ServiceEntityRepository
 
         if ($documentNumber) {
             $queryBuilder
-                ->andWhere('c.documentNumber LIKE :documentNumber')
+                ->andWhere('u.document.number LIKE :documentNumber')
                 ->setParameter('documentNumber', '%' . $documentNumber . '%');
         }
 

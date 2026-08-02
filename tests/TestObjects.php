@@ -49,7 +49,7 @@ final class TestObjects
         );
     }
 
-    public static function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-9'): Company
+    public static function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-1'): Company
     {
         return new Company($name, 'acme@company.com', DocumentType::CUIT, $documentNumber, '011-4444-5555');
     }

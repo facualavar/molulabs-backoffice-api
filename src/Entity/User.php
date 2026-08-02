@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\DocumentType;
 use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -35,8 +36,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 50)]
-    private string $documentNumber;
+    #[ORM\Embedded(class: Document::class, columnPrefix: 'document_')]
+    private Document $document;
 
     #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'users', fetch: 'EAGER')]
     #[ORM\JoinColumn(nullable: false)]
@@ -47,7 +48,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->firstname = $firstname;
         $this->lastname = $lastname;
         $this->email = $email;
-        $this->documentNumber = $documentNumber;
+        $this->document = new Document(DocumentType::DNI, $documentNumber);
         $this->password = $password;
         $this->company = $company;
         $this->roles = [$role->value];
@@ -90,12 +91,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getDocumentNumber(): string
     {
-        return $this->documentNumber;
+        return $this->document->getNumber();
     }
 
     public function setDocumentNumber(string $documentNumber): void
     {
-        $this->documentNumber = $documentNumber;
+        $this->document = new Document(DocumentType::DNI, $documentNumber);
     }
 
     public function getCompany(): Company

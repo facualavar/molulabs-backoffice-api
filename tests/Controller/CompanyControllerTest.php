@@ -34,7 +34,7 @@ final class CompanyControllerTest extends CustomWebTestCase
             'name' => $name,
             'email' => $email,
             'documentType' => 'CUIT',
-            'documentNumber' => '30-12345678-9',
+            'documentNumber' => '30-12345678-1',
             'phone' => '011-4444-5555',
         ], $overrides);
     }
@@ -88,7 +88,7 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesFilteredByDocumentNumberReturnsMatchingCompanies(): void
     {
         $this->loginAsSuperAdmin();
-        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-5');
+        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-0');
         $this->persistedTestObjects->getCompany('Globex', '30-98765432-1');
 
         $this->getRequest('/api/companies?documentNumber=11223344');
@@ -103,7 +103,7 @@ final class CompanyControllerTest extends CustomWebTestCase
     public function testListingCompaniesFilteredByNonMatchingDocumentNumberReturnsEmptyList(): void
     {
         $this->loginAsSuperAdmin();
-        $this->persistedTestObjects->getCompany('Acme Corp', '30-12345678-9');
+        $this->persistedTestObjects->getCompany('Acme Corp', '30-12345678-1');
 
         $this->getRequest('/api/companies?documentNumber=00000000');
 
@@ -266,7 +266,7 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('New Company', $content['name']);
         self::assertSame('new@company.com', $content['email']);
         self::assertSame('CUIT', $content['documentType']);
-        self::assertSame('30-12345678-9', $content['documentNumber']);
+        self::assertSame('30-12345678-1', $content['documentNumber']);
         self::assertSame('011-4444-5555', $content['phone']);
     }
 

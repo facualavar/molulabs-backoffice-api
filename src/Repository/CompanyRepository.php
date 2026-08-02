@@ -80,7 +80,7 @@ class CompanyRepository extends ServiceEntityRepository
     private function applyDocumentNumberFilter(QueryBuilder $queryBuilder, string $documentNumber): void
     {
         $queryBuilder
-            ->andWhere('c.documentNumber LIKE :documentNumber')
+            ->andWhere('c.document.number LIKE :documentNumber')
             ->setParameter('documentNumber', '%' . $documentNumber . '%');
     }
 }

@@ -124,10 +124,8 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersFilteredByDocumentNumberReturnsMatchingUsers(): void
     {
         $this->loginAsSuperAdmin();
-        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-5');
-        $matchingUser = $this->persistedTestObjects->getUser('Wanda', $matchingCompany);
-        $otherCompany = $this->persistedTestObjects->getCompany('Globex', '30-98765432-1');
-        $this->persistedTestObjects->getUser('Bruce', $otherCompany);
+        $matchingUser = $this->persistedTestObjects->getUser('Wanda', null, '11223344');
+        $this->persistedTestObjects->getUser('Bruce', null, '44332211');
 
         $this->getRequest('/api/users?documentNumber=11223344');
 
@@ -141,8 +139,7 @@ final class UserControllerTest extends CustomWebTestCase
     public function testListingUsersFilteredByNonMatchingDocumentNumberReturnsEmptyList(): void
     {
         $this->loginAsSuperAdmin();
-        $company = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-5');
-        $this->persistedTestObjects->getUser('Wanda', $company);
+        $this->persistedTestObjects->getUser('Wanda', null, '11223344');
 
         $this->getRequest('/api/users?documentNumber=00000000');
 

@@ -50,7 +50,7 @@ final class PersistedTestObjects
         return $user;
     }
 
-    public function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-9'): Company
+    public function getCompany(string $name = 'Acme', string $documentNumber = '30-12345678-1'): Company
     {
         $company = TestObjects::getCompany($name, $documentNumber);
 

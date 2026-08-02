@@ -23,11 +23,8 @@ class Company
     #[ORM\Column(length: 100)]
     private string $email;
 
-    #[ORM\Column(length: 20, enumType: DocumentType::class)]
-    private DocumentType $documentType;
-
-    #[ORM\Column(length: 50)]
-    private string $documentNumber;
+    #[ORM\Embedded(class: Document::class, columnPrefix: 'document_')]
+    private Document $document;
 
     #[ORM\Column(length: 20)]
     private string $phone;
@@ -45,8 +42,7 @@ class Company
     {
         $this->name = $name;
         $this->email = $email;
-        $this->documentType = $documentType;
-        $this->documentNumber = $documentNumber;
+        $this->document = new Document($documentType, $documentNumber);
         $this->phone = $phone;
         $this->created_at = new \DateTimeImmutable();
         $this->users = new ArrayCollection();
@@ -79,22 +75,17 @@ class Company
 
     public function getDocumentType(): DocumentType
     {
-        return $this->documentType;
-    }
-
-    public function setDocumentType(DocumentType $documentType): void
-    {
-        $this->documentType = $documentType;
+        return $this->document->getType();
     }
 
     public function getDocumentNumber(): string
     {
-        return $this->documentNumber;
+        return $this->document->getNumber();
     }
 
-    public function setDocumentNumber(string $documentNumber): void
+    public function setDocument(DocumentType $documentType, string $documentNumber): void
     {
-        $this->documentNumber = $documentNumber;
+        $this->document = new Document($documentType, $documentNumber);
     }
 
     public function getPhone(): string

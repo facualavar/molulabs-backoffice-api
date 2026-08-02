@@ -18,7 +18,7 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        $acme = new Company('Acme', 'acme@company.com', DocumentType::CUIT, '30-12345678-9', '011-4444-5555');
+        $acme = new Company('Acme', 'acme@company.com', DocumentType::CUIT, '30-12345678-1', '011-4444-5555');
         $globex = new Company('Globex', 'globex@company.com', DocumentType::CUIT, '30-98765432-1', '011-3333-2222');
 
         $superAdmin = $this->createUser($acme, 'SuperAdmin', 'Company', 'superadmin@company.com', '11111111', UserRole::SUPERADMIN);

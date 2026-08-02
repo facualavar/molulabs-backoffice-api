@@ -26,8 +26,7 @@ final class CompanyService
     {
         $company->setName($name);
         $company->setEmail($email);
-        $company->setDocumentType($documentType);
-        $company->setDocumentNumber($documentNumber);
+        $company->setDocument($documentType, $documentNumber);
         $company->setPhone($phone);
 
         $this->entityManager->flush();
