@@ -22,9 +22,9 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function findByFilters(?Company $company, ?string $name, ?UserRole $role, int $page, int $limit): PaginatedResult
+    public function findByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber, int $page, int $limit): PaginatedResult
     {
-        $queryBuilder = $this->buildFilteredQuery($company, $name, $role);
+        $queryBuilder = $this->buildFilteredQuery($company, $name, $role, $documentNumber);
 
         return $this->paginate($queryBuilder, 'u', $page, $limit);
     }
@@ -32,15 +32,15 @@ class UserRepository extends ServiceEntityRepository
     /**
      * @return iterable<User>
      */
-    public function iterateByFilters(?Company $company, ?string $name, ?UserRole $role): iterable
+    public function iterateByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber = null): iterable
     {
-        return $this->buildFilteredQuery($company, $name, $role)
+        return $this->buildFilteredQuery($company, $name, $role, $documentNumber)
             ->orderBy('u.id', 'ASC')
             ->getQuery()
             ->toIterable();
     }
 
-    private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role): QueryBuilder
+    private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('u')
             ->leftJoin('u.company', 'c')
@@ -62,6 +62,12 @@ class UserRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('u.roles = :role')
                 ->setParameter('role', [$role->value], 'jsonb');
+        }
+
+        if ($documentNumber) {
+            $queryBuilder
+                ->andWhere('c.documentNumber LIKE :documentNumber')
+                ->setParameter('documentNumber', '%' . $documentNumber . '%');
         }
 
         return $queryBuilder;

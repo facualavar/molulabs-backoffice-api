@@ -41,7 +41,7 @@ final class UserController extends AbstractController
     {
         $company = $currentUser->isSuperAdmin() ? null : $currentUser->getCompany();
 
-        $result = $this->userRepository->findByFilters($company, $filter->name, $filter->role, $filter->page, $filter->limit);
+        $result = $this->userRepository->findByFilters($company, $filter->name, $filter->role, $filter->documentNumber, $filter->page, $filter->limit);
 
         return $this->json(PaginatedResponse::fromResult(
             $result,

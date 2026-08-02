@@ -121,6 +121,37 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame($regularUser->getId(), $content['data'][0]['id']);
     }
 
+    public function testListingUsersFilteredByDocumentNumberReturnsMatchingUsers(): void
+    {
+        $this->loginAsSuperAdmin();
+        $matchingCompany = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-5');
+        $matchingUser = $this->persistedTestObjects->getUser('Wanda', $matchingCompany);
+        $otherCompany = $this->persistedTestObjects->getCompany('Globex', '30-98765432-1');
+        $this->persistedTestObjects->getUser('Bruce', $otherCompany);
+
+        $this->getRequest('/api/users?documentNumber=11223344');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(1, $content['data']);
+        self::assertSame($matchingUser->getId(), $content['data'][0]['id']);
+    }
+
+    public function testListingUsersFilteredByNonMatchingDocumentNumberReturnsEmptyList(): void
+    {
+        $this->loginAsSuperAdmin();
+        $company = $this->persistedTestObjects->getCompany('Acme Corp', '20-11223344-5');
+        $this->persistedTestObjects->getUser('Wanda', $company);
+
+        $this->getRequest('/api/users?documentNumber=00000000');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertCount(0, $content['data']);
+    }
+
     public function testListingUsersRespectsLimit(): void
     {
         $admin = $this->loginAsAdmin();
