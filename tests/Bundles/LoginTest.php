@@ -35,7 +35,7 @@ final class LoginTest extends CustomWebTestCase
         $user = $this->persistedTestObjects->getAdminUser();
         $this->encryptPassword($user);
 
-        $this->postRequest('/api/login', ['email' => 'admin@company.com', 'password' => 'password']);
+        $this->postRequest('/api/login', ['email' => $user->getEmail(), 'password' => 'password']);
 
         self::assertResponseIsOk();
     }

@@ -20,7 +20,7 @@ class Company
     #[ORM\Column(length: 50)]
     private string $name;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, unique: true)]
     private string $email;
 
     #[ORM\Embedded(class: Document::class, columnPrefix: 'document_')]

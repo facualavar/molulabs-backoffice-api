@@ -13,6 +13,7 @@ final class TestObjects
 {
     private static int $dniCounter = 40_000_000;
     private static int $cuitBodyCounter = 10_000_000;
+    private static int $emailCounter = 0;
 
     public static function getAdminUser(Company $company, ?string $documentNumber = null): User
     {
@@ -20,7 +21,7 @@ final class TestObjects
             $company,
             'Admin',
             'Company',
-            'admin@company.com',
+            self::nextEmail('admin'),
             $documentNumber ?? self::nextDni(),
             'password',
             UserRole::ADMIN,
@@ -33,7 +34,7 @@ final class TestObjects
             $company,
             'SuperAdmin',
             'Company',
-            'superadmin@company.com',
+            self::nextEmail('superadmin'),
             $documentNumber ?? self::nextDni(),
             'password',
             UserRole::SUPERADMIN,
@@ -46,7 +47,7 @@ final class TestObjects
             $company,
             $firstname,
             'User',
-            'user@company.com',
+            self::nextEmail('user'),
             $documentNumber ?? self::nextDni(),
             'password',
         );
@@ -54,7 +55,7 @@ final class TestObjects
 
     public static function getCompany(string $name = 'Acme', ?string $documentNumber = null): Company
     {
-        return new Company($name, 'acme@company.com', DocumentType::CUIT, $documentNumber ?? self::nextCuit(), '011-4444-5555');
+        return new Company($name, self::nextEmail('company'), DocumentType::CUIT, $documentNumber ?? self::nextCuit(), '011-4444-5555');
     }
 
     public static function getExportJob(User $requestedBy, ExportType $type = ExportType::USERS): ExportJob
@@ -65,6 +66,11 @@ final class TestObjects
     private static function nextDni(): string
     {
         return (string) self::$dniCounter++;
+    }
+
+    private static function nextEmail(string $localPart): string
+    {
+        return $localPart . (self::$emailCounter++) . '@company.com';
     }
 
     private static function nextCuit(): string

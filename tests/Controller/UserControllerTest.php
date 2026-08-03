@@ -355,6 +355,26 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame('documentNumber', $content['errors'][0]['field']);
     }
 
+    public function testCreatingUserWithDuplicateEmailReturnsConflict(): void
+    {
+        $actingUser = $this->loginAsAdmin();
+        $existingUser = $this->persistedTestObjects->getUser('Wanda', $actingUser->getCompany());
+
+        $this->postRequest('/api/users', [
+            'firstname' => 'New',
+            'lastname' => 'User',
+            'email' => $existingUser->getEmail(),
+            'documentNumber' => '99999999',
+            'password' => 'password',
+            'role' => 'ROLE_USER',
+        ]);
+
+        self::assertResponseIsConflict();
+
+        $content = $this->getResponseContent();
+        self::assertSame('email', $content['errors'][0]['field']);
+    }
+
     public function testCreatingUserWithSuperAdminRoleReturnsBadRequest(): void
     {
         $superAdmin = $this->loginAsSuperAdmin();

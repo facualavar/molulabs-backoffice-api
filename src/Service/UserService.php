@@ -8,6 +8,7 @@ use App\Enum\UserRole;
 use App\Exception\CannotAssignSuperAdminRoleException;
 use App\Exception\CannotDeleteOwnUserException;
 use App\Exception\DuplicateDocumentNumberException;
+use App\Exception\DuplicateEmailException;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -27,6 +28,7 @@ final class UserService
         $user->setPassword($this->authService->hashPassword($user, $password));
 
         $this->assertDocumentNumberIsUnique($user);
+        $this->assertEmailIsUnique($user);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -47,6 +49,7 @@ final class UserService
         $user->setRole($role);
 
         $this->assertDocumentNumberIsUnique($user);
+        $this->assertEmailIsUnique($user);
 
         $this->entityManager->flush();
 
@@ -85,6 +88,15 @@ final class UserService
 
         if ($existing && $existing->getId() !== $user->getId()) {
             throw new DuplicateDocumentNumberException($user->getDocumentNumber());
+        }
+    }
+
+    private function assertEmailIsUnique(User $user): void
+    {
+        $existing = $this->userRepository->findOneByEmail($user->getEmail());
+
+        if ($existing && $existing->getId() !== $user->getId()) {
+            throw new DuplicateEmailException($user->getEmail());
         }
     }
 }

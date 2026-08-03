@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Company;
 use App\Enum\DocumentType;
 use App\Exception\DuplicateDocumentNumberException;
+use App\Exception\DuplicateEmailException;
 use App\Repository\CompanyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -20,6 +21,7 @@ final class CompanyService
         $company = new Company($name, $email, $documentType, $documentNumber, $phone);
 
         $this->assertDocumentNumberIsUnique($company);
+        $this->assertEmailIsUnique($company);
 
         $this->entityManager->persist($company);
         $this->entityManager->flush();
@@ -35,6 +37,7 @@ final class CompanyService
         $company->setPhone($phone);
 
         $this->assertDocumentNumberIsUnique($company);
+        $this->assertEmailIsUnique($company);
 
         $this->entityManager->flush();
 
@@ -53,6 +56,15 @@ final class CompanyService
 
         if ($existing && $existing->getId() !== $company->getId()) {
             throw new DuplicateDocumentNumberException($company->getDocumentNumber());
+        }
+    }
+
+    private function assertEmailIsUnique(Company $company): void
+    {
+        $existing = $this->companyRepository->findOneByEmail($company->getEmail());
+
+        if ($existing && $existing->getId() !== $company->getId()) {
+            throw new DuplicateEmailException($company->getEmail());
         }
     }
 }

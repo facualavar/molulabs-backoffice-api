@@ -63,6 +63,15 @@ class CompanyRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findOneByEmail(string $email): ?Company
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.email = :email')
+            ->setParameter('email', $email)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return list<array{id: int, name: string}>
      */
