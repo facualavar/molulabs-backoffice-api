@@ -23,7 +23,7 @@ class AppFixtures extends Fixture
 
         $superAdmin = $this->createUser($acme, 'SuperAdmin', 'Company', 'superadmin@company.com', '11111111', UserRole::SUPERADMIN);
         $admin = $this->createUser($acme, 'Admin', 'Company', 'admin@company.com', '22222222', UserRole::ADMIN);
-        $user = $this->createUser($globex, 'Regular', 'User', 'user@company.com', '33333333', UserRole::USER);
+        $user = $this->createUser($acme, 'Regular', 'User', 'user@company.com', '33333333', UserRole::USER);
 
         $manager->persist($acme);
         $manager->persist($globex);
