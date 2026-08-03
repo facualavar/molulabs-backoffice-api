@@ -42,7 +42,7 @@ final class UserController extends AbstractController
     {
         $company = $currentUser->isSuperAdmin() ? null : $currentUser->getCompany();
 
-        $result = $this->userRepository->findByFilters($company, $filter->name, $filter->role, $filter->documentNumber, $filter->page, $filter->limit);
+        $result = $this->userRepository->findByFilters($company, $filter->name, $filter->role, $filter->documentNumber, $filter->page, $filter->limit, $currentUser->isSuperAdmin());
 
         return $this->json(PaginatedResponse::fromResult(
             $result,
@@ -94,9 +94,9 @@ final class UserController extends AbstractController
 
     #[Route('/{user}', name: 'user_delete', methods: ['DELETE'])]
     #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: 'User not found.')]
-    public function delete(User $user): JsonResponse
+    public function delete(User $user, #[CurrentUser] User $currentUser): JsonResponse
     {
-        $this->userService->delete($user);
+        $this->userService->delete($user, $currentUser);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

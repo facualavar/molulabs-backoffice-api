@@ -3,6 +3,7 @@
 namespace App\Tests;
 
 use App\Entity\Company;
+use App\Entity\ExportJob;
 use App\Entity\User;
 use App\Enum\ExportType;
 use App\Tests\Scenario\AdminExportJobScenario;
@@ -102,6 +103,51 @@ final class PersistedTestObjects
         $this->persistAndFlushEntities([$company, $admin, $mate, $exportJob]);
 
         return new AdminExportJobScenario($admin, $exportJob);
+    }
+
+    /**
+     * @return list<User>
+     */
+    public function adminWithSuperAdminCompanyMate(): array
+    {
+        $company = TestObjects::getCompany();
+        $admin = TestObjects::getAdminUser($company);
+        $superAdmin = TestObjects::getSuperAdminUser($company);
+
+        $this->persistAndFlushEntities([$company, $admin, $superAdmin]);
+
+        return [$admin, $superAdmin];
+    }
+
+    /**
+     * @return array{0: User, 1: User, 2: ExportJob}
+     */
+    public function adminWithSuperAdminCompanyMateAndExportJob(ExportType $type = ExportType::USERS): array
+    {
+        $company = TestObjects::getCompany();
+        $admin = TestObjects::getAdminUser($company);
+        $superAdmin = TestObjects::getSuperAdminUser($company);
+        $exportJob = TestObjects::getExportJob($admin, $type);
+
+        $this->persistAndFlushEntities([$company, $admin, $superAdmin, $exportJob]);
+
+        return [$admin, $superAdmin, $exportJob];
+    }
+
+    /**
+     * @return list<User>
+     */
+    public function twoSuperAdmins(): array
+    {
+        $firstCompany = TestObjects::getCompany();
+        $first = TestObjects::getSuperAdminUser($firstCompany);
+
+        $secondCompany = TestObjects::getCompany();
+        $second = TestObjects::getSuperAdminUser($secondCompany);
+
+        $this->persistAndFlushEntities([$firstCompany, $first, $secondCompany, $second]);
+
+        return [$first, $second];
     }
 
     public function getAdminUser(): User

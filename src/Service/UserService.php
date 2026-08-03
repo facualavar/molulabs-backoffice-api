@@ -6,6 +6,7 @@ use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\UserRole;
 use App\Exception\CannotAssignSuperAdminRoleException;
+use App\Exception\CannotDeleteOwnUserException;
 use App\Exception\DuplicateDocumentNumberException;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -61,8 +62,12 @@ final class UserService
         return $user;
     }
 
-    public function delete(User $user): void
+    public function delete(User $user, User $currentUser): void
     {
+        if ($user->getId() === $currentUser->getId()) {
+            throw new CannotDeleteOwnUserException();
+        }
+
         $this->entityManager->remove($user);
         $this->entityManager->flush();
     }

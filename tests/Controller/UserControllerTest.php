@@ -221,6 +221,34 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertCount(2, $content['data']);
     }
 
+    public function testListingUsersAsRegularAdminExcludesSuperAdmins(): void
+    {
+        [$admin, $superAdmin] = $this->persistedTestObjects->adminWithSuperAdminCompanyMate();
+        $this->loginAs($admin);
+
+        $this->getRequest('/api/users?limit=20');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        $ids = array_column($content['data'], 'id');
+        self::assertNotContains($superAdmin->getId(), $ids);
+    }
+
+    public function testListingUsersAsSuperAdminIncludesOtherSuperAdmins(): void
+    {
+        [$loggedInSuperAdmin, $otherSuperAdmin] = $this->persistedTestObjects->twoSuperAdmins();
+        $this->loginAs($loggedInSuperAdmin);
+
+        $this->getRequest('/api/users?limit=20');
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        $ids = array_column($content['data'], 'id');
+        self::assertContains($otherSuperAdmin->getId(), $ids);
+    }
+
     public function testListingUsersAsSuperAdminReturnsUsersFromAllCompanies(): void
     {
         $this->loginAsSuperAdmin();
@@ -460,11 +488,23 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testDeletingExistingUserReturnsNoContent(): void
     {
-        $user = $this->loginAsAdmin();
+        $admin = $this->loginAsAdmin();
+        [$companyMate] = $this->persistedTestObjects->users([
+            ['firstname' => 'Wanda', 'company' => $admin->getCompany()],
+        ]);
 
-        $this->deleteRequest('/api/users/' . $user->getId());
+        $this->deleteRequest('/api/users/' . $companyMate->getId());
 
         self::assertResponseIsNoContent();
+    }
+
+    public function testDeletingOwnUserReturnsBadRequest(): void
+    {
+        $admin = $this->loginAsAdmin();
+
+        $this->deleteRequest('/api/users/' . $admin->getId());
+
+        self::assertResponseIsBadRequest();
     }
 
     public function testDeletingUserFromAnotherCompanyReturnsNotFound(): void

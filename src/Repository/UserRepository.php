@@ -22,9 +22,9 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function findByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber, int $page, int $limit): PaginatedResult
+    public function findByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber, int $page, int $limit, bool $includeSuperAdmins = true): PaginatedResult
     {
-        $queryBuilder = $this->buildFilteredQuery($company, $name, $role, $documentNumber);
+        $queryBuilder = $this->buildFilteredQuery($company, $name, $role, $documentNumber, $includeSuperAdmins);
 
         return $this->paginate($queryBuilder, 'u', $page, $limit);
     }
@@ -32,9 +32,9 @@ class UserRepository extends ServiceEntityRepository
     /**
      * @return iterable<User>
      */
-    public function iterateByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber = null): iterable
+    public function iterateByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber = null, bool $includeSuperAdmins = true): iterable
     {
-        return $this->buildFilteredQuery($company, $name, $role, $documentNumber)
+        return $this->buildFilteredQuery($company, $name, $role, $documentNumber, $includeSuperAdmins)
             ->orderBy('u.id', 'ASC')
             ->getQuery()
             ->toIterable();
@@ -49,7 +49,7 @@ class UserRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber): QueryBuilder
+    private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber, bool $includeSuperAdmins): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('u')
             ->leftJoin('u.company', 'c')
@@ -77,6 +77,12 @@ class UserRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('u.document.number LIKE :documentNumber')
                 ->setParameter('documentNumber', '%' . $documentNumber . '%');
+        }
+
+        if (!$includeSuperAdmins) {
+            $queryBuilder
+                ->andWhere('u.roles != :excludedRole')
+                ->setParameter('excludedRole', [UserRole::SUPERADMIN->value], 'jsonb');
         }
 
         return $queryBuilder;
