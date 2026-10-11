@@ -2,60 +2,88 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\ExportJob;
 use App\Entity\User;
+use App\Repository\ExportJobRepository;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 abstract class CustomWebTestCase extends WebTestCase
 {
     protected ?KernelBrowser $client;
 
+    private ?string $token = null;
+
     protected function tearDown(): void
     {
         $this->client = null;
+        $this->token = null;
         parent::tearDown();
     }
 
     protected function postRequest(string $uri, array $data = [], array $headers = []): void
     {
-        $headers = $this->addHeaderContentType($headers);
+        $headers = $this->addAuthorization($this->addHeaderContentType($headers));
 
         $this->client->request('POST', $uri, [], [], $headers, json_encode($data));
     }
 
     protected function getRequest(string $uri, array $headers = []): void
     {
-        $this->client->request('GET', $uri, [], [], $headers);
+        $this->client->request('GET', $uri, [], [], $this->addAuthorization($headers));
     }
 
     protected function putRequest(string $uri, array $data = [], array $headers = []): void
     {
-        $headers = $this->addHeaderContentType($headers);
+        $headers = $this->addAuthorization($this->addHeaderContentType($headers));
 
         $this->client->request('PUT', $uri, [], [], $headers, json_encode($data));
     }
 
     protected function deleteRequest(string $uri, array $headers = []): void
     {
-        $this->client->request('DELETE', $uri, [], [], $headers);
+        $this->client->request('DELETE', $uri, [], [], $this->addAuthorization($headers));
     }
 
-    protected function patchRequest(string $uri, array $headers = []): void
+    protected function patchRequest(string $uri, array $data = [], array $headers = []): void
     {
-        $this->client->request('PATCH', $uri, [], [], $headers);
+        $headers = $this->addAuthorization($this->addHeaderContentType($headers));
+
+        $this->client->request('PATCH', $uri, [], [], $headers, json_encode($data));
     }
 
+    /**
+     * Mints the JWT the api firewall expects. Unlike KernelBrowser::loginUser(), which only
+     * survives one request on a stateless firewall, the token is sent on every later request.
+     */
     protected function loginAs(User $user): void
     {
-        $this->client->loginUser($user, 'api');
+        $this->token = static::getContainer()->get(JWTTokenManagerInterface::class)->create($user);
+    }
+
+    protected function logout(): void
+    {
+        $this->token = null;
     }
 
     protected function encryptPassword(User $user): void
     {
         $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
         $user->setPassword($passwordHasher->hashPassword($user, $user->getPassword()));
+    }
+
+    private function addAuthorization(array $headers): array
+    {
+        if (!$this->token) {
+            return $headers;
+        }
+
+        return array_merge($headers, [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $this->token,
+        ]);
     }
 
     private function addHeaderContentType(array $headers): array
@@ -73,6 +101,14 @@ abstract class CustomWebTestCase extends WebTestCase
     protected function getResponseContent()
     {
         return json_decode($this->getResponseFromClient()->getContent(), true);
+    }
+
+    /**
+     * The export endpoints only answer with the job; its stored filters are read back from here.
+     */
+    protected function findExportJob(int $id): ExportJob
+    {
+        return static::getContainer()->get(ExportJobRepository::class)->find($id);
     }
 
     protected static function assertResponseIsCreated(): void
