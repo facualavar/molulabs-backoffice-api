@@ -60,7 +60,10 @@ final class CompanyController extends AbstractController
     #[Route('/export', name: 'company_export', methods: ['POST'])]
     public function export(#[CurrentUser] User $currentUser, #[MapQueryString] CompanyFilterRequest $filter): JsonResponse
     {
-        $job = $this->exportService->create(ExportType::COMPANIES, ['name' => $filter->name], $currentUser);
+        $job = $this->exportService->create(ExportType::COMPANIES, [
+            'name' => $filter->name,
+            'documentNumber' => $filter->documentNumber,
+        ], $currentUser);
 
         return $this->json(ExportJobResponse::fromEntity($job), Response::HTTP_ACCEPTED);
     }

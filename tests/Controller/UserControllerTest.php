@@ -278,6 +278,19 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame('pending', $content['status']);
     }
 
+    public function testExportingUsersKeepsListFilters(): void
+    {
+        $admin = $this->loginAsAdmin();
+
+        $this->postRequest('/api/users/export?name=Wanda&role=ROLE_USER&documentNumber=3011');
+
+        self::assertResponseIsAccepted();
+        self::assertSame(
+            ['name' => 'Wanda', 'role' => 'ROLE_USER', 'documentNumber' => '3011', 'companyId' => $admin->getCompany()->getId()],
+            $this->findExportJob($this->getResponseContent()['id'])->getFilters(),
+        );
+    }
+
     public function testExportingUsersAsRegularUserReturnsForbidden(): void
     {
         $this->loginAsRegularUser();

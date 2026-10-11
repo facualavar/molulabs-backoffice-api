@@ -40,7 +40,7 @@ final class UserController extends AbstractController
     #[Route('', name: 'user_list', methods: ['GET'])]
     public function index(#[CurrentUser] User $currentUser, #[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
-        $company = $currentUser->isSuperAdmin() ? null : $currentUser->getCompany();
+        $company = $currentUser->getVisibleCompany();
 
         $result = $this->userRepository->findByFilters($company, $filter->name, $filter->role, $filter->documentNumber, $filter->page, $filter->limit, $currentUser->isSuperAdmin());
 
@@ -58,6 +58,7 @@ final class UserController extends AbstractController
         $job = $this->exportService->create(ExportType::USERS, [
             'name' => $filter->name,
             'role' => $filter->role?->value,
+            'documentNumber' => $filter->documentNumber,
             'companyId' => $companyId,
         ], $currentUser);
 

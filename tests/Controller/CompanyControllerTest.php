@@ -184,6 +184,19 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('pending', $content['status']);
     }
 
+    public function testExportingCompaniesKeepsListFilters(): void
+    {
+        $this->loginAsSuperAdmin();
+
+        $this->postRequest('/api/companies/export?name=Acme&documentNumber=7123');
+
+        self::assertResponseIsAccepted();
+        self::assertSame(
+            ['name' => 'Acme', 'documentNumber' => '7123'],
+            $this->findExportJob($this->getResponseContent()['id'])->getFilters(),
+        );
+    }
+
     public function testExportingCompaniesAsRegularAdminReturnsForbidden(): void
     {
         $this->loginAs($this->persistedTestObjects->getAdminUser());

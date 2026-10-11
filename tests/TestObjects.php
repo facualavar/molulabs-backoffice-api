@@ -58,9 +58,12 @@ final class TestObjects
         return new Company($name, self::nextEmail('company'), DocumentType::CUIT, $documentNumber ?? self::nextCuit(), '011-4444-5555');
     }
 
-    public static function getExportJob(User $requestedBy, ExportType $type = ExportType::USERS): ExportJob
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public static function getExportJob(User $requestedBy, ExportType $type = ExportType::USERS, array $filters = []): ExportJob
     {
-        return new ExportJob($type, [], $requestedBy);
+        return new ExportJob($type, $filters, $requestedBy);
     }
 
     private static function nextDni(): string

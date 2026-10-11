@@ -24,31 +24,15 @@ class CompanyRepository extends ServiceEntityRepository
 
     public function findByFilters(?string $name, ?string $documentNumber, int $page, int $limit): PaginatedResult
     {
-        $queryBuilder = $this->createQueryBuilder('c');
-
-        if ($name) {
-            $this->applyNameFilter($queryBuilder, $name);
-        }
-
-        if ($documentNumber) {
-            $this->applyDocumentNumberFilter($queryBuilder, $documentNumber);
-        }
-
-        return $this->paginate($queryBuilder, 'c', $page, $limit);
+        return $this->paginate($this->buildFilteredQuery($name, $documentNumber), 'c', $page, $limit);
     }
 
     /**
      * @return iterable<Company>
      */
-    public function iterateByFilters(?string $name): iterable
+    public function iterateByFilters(?string $name, ?string $documentNumber): iterable
     {
-        $queryBuilder = $this->createQueryBuilder('c');
-
-        if ($name) {
-            $this->applyNameFilter($queryBuilder, $name);
-        }
-
-        return $queryBuilder
+        return $this->buildFilteredQuery($name, $documentNumber)
             ->orderBy('c.id', 'ASC')
             ->getQuery()
             ->toIterable();
@@ -86,6 +70,21 @@ class CompanyRepository extends ServiceEntityRepository
             ->setMaxResults(self::AUTOCOMPLETE_LIMIT)
             ->getQuery()
             ->getArrayResult();
+    }
+
+    private function buildFilteredQuery(?string $name, ?string $documentNumber): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('c');
+
+        if ($name) {
+            $this->applyNameFilter($queryBuilder, $name);
+        }
+
+        if ($documentNumber) {
+            $this->applyDocumentNumberFilter($queryBuilder, $documentNumber);
+        }
+
+        return $queryBuilder;
     }
 
     private function applyNameFilter(QueryBuilder $queryBuilder, string $name): void

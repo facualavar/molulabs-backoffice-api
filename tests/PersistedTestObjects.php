@@ -93,14 +93,36 @@ final class PersistedTestObjects
         return new AdminExportJobScenario($admin, $exportJob);
     }
 
-    public function adminWithExportJobAndCompanyMate(ExportType $type = ExportType::USERS): AdminExportJobScenario
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function adminWithExportJobAndCompanyMate(ExportType $type = ExportType::USERS, array $filters = [], ?string $adminDocumentNumber = null): AdminExportJobScenario
+    {
+        $company = TestObjects::getCompany();
+        $admin = TestObjects::getAdminUser($company, $adminDocumentNumber);
+        $mate = TestObjects::getUser($company, 'Wanda');
+        $exportJob = TestObjects::getExportJob($admin, $type, $filters);
+
+        $this->persistAndFlushEntities([$company, $admin, $mate, $exportJob]);
+
+        return new AdminExportJobScenario($admin, $exportJob);
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @param list<string> $companyDocumentNumbers
+     */
+    public function adminWithCompaniesExportJob(array $filters, array $companyDocumentNumbers): AdminExportJobScenario
     {
         $company = TestObjects::getCompany();
         $admin = TestObjects::getAdminUser($company);
-        $mate = TestObjects::getUser($company, 'Wanda');
-        $exportJob = TestObjects::getExportJob($admin, $type);
+        $exportJob = TestObjects::getExportJob($admin, ExportType::COMPANIES, $filters);
+        $companies = array_map(
+            static fn (string $documentNumber) => TestObjects::getCompany(documentNumber: $documentNumber),
+            $companyDocumentNumbers,
+        );
 
-        $this->persistAndFlushEntities([$company, $admin, $mate, $exportJob]);
+        $this->persistAndFlushEntities([$company, $admin, $exportJob, ...$companies]);
 
         return new AdminExportJobScenario($admin, $exportJob);
     }

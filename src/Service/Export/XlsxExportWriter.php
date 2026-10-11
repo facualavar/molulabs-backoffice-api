@@ -65,10 +65,10 @@ final class XlsxExportWriter
 
     private function companyRows(ExportJob $job): iterable
     {
-        $name = $job->getFilters()['name'] ?? null;
+        $filters = $job->getFilters();
         $protectedCompanyId = $job->getRequestedBy()->getCompany()->getId();
 
-        foreach ($this->companyRepository->iterateByFilters($name) as $company) {
+        foreach ($this->companyRepository->iterateByFilters($filters['name'] ?? null, $filters['documentNumber'] ?? null) as $company) {
             yield [
                 $company->getId(),
                 $company->getName(),
@@ -90,11 +90,12 @@ final class XlsxExportWriter
         $filters = $job->getFilters();
         $name = $filters['name'] ?? null;
         $role = isset($filters['role']) ? UserRole::from($filters['role']) : null;
+        $documentNumber = $filters['documentNumber'] ?? null;
         $company = isset($filters['companyId']) ? $this->companyRepository->find($filters['companyId']) : null;
         $requestedBy = $job->getRequestedBy();
         $protectedUserId = $requestedBy->getId();
 
-        foreach ($this->userRepository->iterateByFilters($company, $name, $role, includeSuperAdmins: $requestedBy->isSuperAdmin()) as $user) {
+        foreach ($this->userRepository->iterateByFilters($company, $name, $role, $documentNumber, $requestedBy->isSuperAdmin()) as $user) {
             yield [
                 $user->getId(),
                 $user->getFirstname(),
