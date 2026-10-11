@@ -10,8 +10,13 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
 #[ORM\Table(name: '`companies`')]
+#[ORM\UniqueConstraint(name: self::EMAIL_UNIQUE, columns: ['email'])]
+#[ORM\UniqueConstraint(name: self::DOCUMENT_NUMBER_UNIQUE, columns: ['document_number'])]
 class Company
 {
+    public const string EMAIL_UNIQUE = 'company_email_unique';
+    public const string DOCUMENT_NUMBER_UNIQUE = 'company_document_number_unique';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -20,7 +25,7 @@ class Company
     #[ORM\Column(length: 50)]
     private string $name;
 
-    #[ORM\Column(length: 100, unique: true)]
+    #[ORM\Column(length: 100)]
     private string $email;
 
     #[ORM\Embedded(class: Document::class, columnPrefix: 'document_')]

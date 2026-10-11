@@ -11,8 +11,13 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`users`')]
+#[ORM\UniqueConstraint(name: self::EMAIL_UNIQUE, columns: ['email'])]
+#[ORM\UniqueConstraint(name: self::DOCUMENT_NUMBER_UNIQUE, columns: ['document_number'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const string EMAIL_UNIQUE = 'user_email_unique';
+    public const string DOCUMENT_NUMBER_UNIQUE = 'user_document_number_unique';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -24,7 +29,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 50)]
     private ?string $lastname = null;
 
-    #[ORM\Column(length: 100, unique: true)]
+    #[ORM\Column(length: 100)]
     private ?string $email = null;
 
     /**
@@ -79,6 +84,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->lastname = $lastname;
     }
 
+    public function getFullName(): string
+    {
+        return trim($this->firstname . ' ' . $this->lastname);
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;
@@ -130,6 +140,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isSuperAdmin(): bool
     {
         return $this->getRole() === UserRole::SUPERADMIN;
+    }
+
+    public function isPlainUser(): bool
+    {
+        return $this->getRole() === UserRole::USER;
+    }
+
+    /**
+     * The company a listing must be limited to: none for a superadmin, who sees every company.
+     */
+    public function getVisibleCompany(): ?Company
+    {
+        return $this->isSuperAdmin() ? null : $this->company;
     }
 
     public function getPassword(): ?string

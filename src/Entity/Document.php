@@ -23,7 +23,10 @@ class Document
     #[ORM\Column(length: 20, enumType: DocumentType::class)]
     private DocumentType $type;
 
-    #[ORM\Column(length: 50, unique: true)]
+    /**
+     * Unique per table: each entity embedding it declares a named constraint on document_number.
+     */
+    #[ORM\Column(length: 50)]
     private string $number;
 
     public function __construct(DocumentType $type, string $number)

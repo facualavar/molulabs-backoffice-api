@@ -11,6 +11,8 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class CompanyService
 {
+    use FlushesUniqueFields;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CompanyRepository $companyRepository,
@@ -24,7 +26,7 @@ final class CompanyService
         $this->assertEmailIsUnique($company);
 
         $this->entityManager->persist($company);
-        $this->entityManager->flush();
+        $this->flushRejectingDuplicates($company);
 
         return $company;
     }
@@ -39,7 +41,7 @@ final class CompanyService
         $this->assertDocumentNumberIsUnique($company);
         $this->assertEmailIsUnique($company);
 
-        $this->entityManager->flush();
+        $this->flushRejectingDuplicates($company);
 
         return $company;
     }
@@ -66,5 +68,13 @@ final class CompanyService
         if ($existing && $existing->getId() !== $company->getId()) {
             throw new DuplicateEmailException($company->getEmail());
         }
+    }
+
+    private function flushRejectingDuplicates(Company $company): void
+    {
+        $this->flushUnique($this->entityManager, [
+            Company::EMAIL_UNIQUE => fn () => new DuplicateEmailException($company->getEmail()),
+            Company::DOCUMENT_NUMBER_UNIQUE => fn () => new DuplicateDocumentNumberException($company->getDocumentNumber()),
+        ]);
     }
 }

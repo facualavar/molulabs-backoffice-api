@@ -14,6 +14,8 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class UserService
 {
+    use FlushesUniqueFields;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private AuthService $authService,
@@ -31,7 +33,7 @@ final class UserService
         $this->assertEmailIsUnique($user);
 
         $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $this->flushRejectingDuplicates($user);
 
         return $user;
     }
@@ -51,7 +53,7 @@ final class UserService
         $this->assertDocumentNumberIsUnique($user);
         $this->assertEmailIsUnique($user);
 
-        $this->entityManager->flush();
+        $this->flushRejectingDuplicates($user);
 
         return $user;
     }
@@ -98,5 +100,13 @@ final class UserService
         if ($existing && $existing->getId() !== $user->getId()) {
             throw new DuplicateEmailException($user->getEmail());
         }
+    }
+
+    private function flushRejectingDuplicates(User $user): void
+    {
+        $this->flushUnique($this->entityManager, [
+            User::EMAIL_UNIQUE => fn () => new DuplicateEmailException($user->getEmail()),
+            User::DOCUMENT_NUMBER_UNIQUE => fn () => new DuplicateDocumentNumberException($user->getDocumentNumber()),
+        ]);
     }
 }
