@@ -45,10 +45,13 @@ security:
             security: false
 
 
+    # Only authentication is checked here. Who may use each endpoint is declared next to it with
+    # #[IsGranted] (ROLE_USER, ROLE_ADMIN or a voter), and RouteAccessDeclarationTest fails when an
+    # /api action declares none.
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/refresh, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
