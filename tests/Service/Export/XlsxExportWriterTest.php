@@ -41,6 +41,53 @@ final class XlsxExportWriterTest extends KernelTestCase
         unlink($filePath);
     }
 
+    public function testWritingUsersExportWritesEveryColumnOfTheUser(): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::USERS);
+        $admin = $scenario->admin;
+
+        $writer = static::getContainer()->get(XlsxExportWriter::class);
+        $filePath = $writer->write($scenario->exportJob);
+
+        $rows = $this->readRows($filePath);
+
+        self::assertSame(['ID', 'Nombre', 'Apellido', 'Email', 'Rol', 'Empresa'], $rows[0]);
+        self::assertSame([
+            $admin->getId(),
+            $admin->getFirstname(),
+            $admin->getLastname(),
+            $admin->getEmail(),
+            $admin->getRole()->value,
+            $admin->getCompany()->getName(),
+        ], $rows[1]);
+
+        unlink($filePath);
+    }
+
+    public function testWritingCompaniesExportWritesEveryColumnOfTheCompany(): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::COMPANIES);
+        $company = $scenario->admin->getCompany();
+
+        $writer = static::getContainer()->get(XlsxExportWriter::class);
+        $filePath = $writer->write($scenario->exportJob);
+
+        $rows = $this->readRows($filePath);
+
+        self::assertSame(['ID', 'Nombre', 'Email', 'Tipo de Documento', 'Número de Documento', 'Teléfono', 'Fecha de Creación'], $rows[0]);
+        self::assertSame([
+            $company->getId(),
+            $company->getName(),
+            $company->getEmail(),
+            $company->getDocumentType()->value,
+            $company->getDocumentNumber(),
+            $company->getPhone(),
+            $company->getCreatedAt()->format('Y-m-d H:i:s'),
+        ], $rows[1]);
+
+        unlink($filePath);
+    }
+
     /**
      * @return list<list<scalar>>
      */

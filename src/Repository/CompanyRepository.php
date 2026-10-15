@@ -4,7 +4,9 @@ namespace App\Repository;
 
 use App\Dto\Pagination\PaginatedResult;
 use App\Entity\Company;
+use App\Enum\DocumentType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -28,14 +30,18 @@ class CompanyRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return iterable<Company>
+     * Plain rows instead of entities: an export reads every match, and hydrating them would keep
+     * each one in memory until the end.
+     *
+     * @return iterable<array{id: int, name: string, email: string, documentType: DocumentType, documentNumber: string, phone: string, createdAt: \DateTimeImmutable}>
      */
-    public function iterateByFilters(?string $name, ?string $documentNumber): iterable
+    public function iterateExportRowsByFilters(?string $name, ?string $documentNumber): iterable
     {
         return $this->buildFilteredQuery($name, $documentNumber)
+            ->select('c.id', 'c.name', 'c.email', 'c.document.type AS documentType', 'c.document.number AS documentNumber', 'c.phone', 'c.createdAt')
             ->orderBy('c.id', 'ASC')
             ->getQuery()
-            ->toIterable();
+            ->toIterable([], AbstractQuery::HYDRATE_ARRAY);
     }
 
     public function findOneByDocumentNumber(string $documentNumber): ?Company

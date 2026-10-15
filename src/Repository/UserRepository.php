@@ -7,6 +7,7 @@ use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\UserRole;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -30,14 +31,18 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return iterable<User>
+     * Plain rows instead of entities: an export reads every match, and hydrating them would keep
+     * each one in memory until the end.
+     *
+     * @return iterable<array{id: int, firstname: string, lastname: string, email: string, role: UserRole, companyName: string}>
      */
-    public function iterateByFilters(User $viewer, ?string $name, ?UserRole $role, ?string $documentNumber = null): iterable
+    public function iterateExportRowsByFilters(User $viewer, ?string $name, ?UserRole $role, ?string $documentNumber = null): iterable
     {
         return $this->buildFilteredQuery($viewer, $name, $role, $documentNumber)
+            ->select('u.id', 'u.firstname', 'u.lastname', 'u.email', 'u.role', 'c.name AS companyName')
             ->orderBy('u.id', 'ASC')
             ->getQuery()
-            ->toIterable();
+            ->toIterable([], AbstractQuery::HYDRATE_ARRAY);
     }
 
     public function existsByCompany(Company $company): bool
