@@ -6,15 +6,19 @@ use App\Message\ExportMessage;
 use App\Repository\ExportJobRepository;
 use App\Service\Export\XlsxExportWriter;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
 final class ExportMessageHandler
 {
+    private const string FAILURE_MESSAGE = 'No se pudo generar la exportación.';
+
     public function __construct(
         private readonly ExportJobRepository $exportJobRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly XlsxExportWriter $writer,
+        private readonly LoggerInterface $logger,
     ) {}
 
     public function __invoke(ExportMessage $message): void
@@ -33,7 +37,9 @@ final class ExportMessageHandler
 
             $job->markAsReady($filePath);
         } catch (\Throwable $exception) {
-            $job->markAsFailed($exception->getMessage());
+            $this->logger->error('Export job {id} failed.', ['id' => $job->getId(), 'exception' => $exception]);
+
+            $job->markAsFailed(self::FAILURE_MESSAGE);
         }
 
         $this->entityManager->flush();

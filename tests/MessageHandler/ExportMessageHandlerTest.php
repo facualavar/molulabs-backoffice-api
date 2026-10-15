@@ -7,6 +7,7 @@ use App\Enum\ExportType;
 use App\Message\ExportMessage;
 use App\MessageHandler\ExportMessageHandler;
 use App\Tests\PersistedTestObjects;
+use App\Tests\TestObjects;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenSpout\Reader\XLSX\Reader;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -74,6 +75,37 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
         self::assertSame(['30-71234567-1'], array_column($this->readDataRows($scenario->exportJob->getFilePath()), 4));
+    }
+
+    public function testHandlingTwoExportsOfTheSameTypeWritesDifferentFiles(): void
+    {
+        $first = $this->persistedTestObjects->adminWithOwnExportJob();
+        $secondJob = TestObjects::getExportJob($first->admin);
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->persist($secondJob);
+        $entityManager->flush();
+
+        $handler = static::getContainer()->get(ExportMessageHandler::class);
+        $handler(new ExportMessage($first->exportJob->getId()));
+        $handler(new ExportMessage($secondJob->getId()));
+
+        self::assertNotSame($first->exportJob->getFilePath(), $secondJob->getFilePath());
+        self::assertStringContainsString('_' . $first->exportJob->getId() . '_', $first->exportJob->getFilePath());
+
+        unlink($first->exportJob->getFilePath());
+        unlink($secondJob->getFilePath());
+    }
+
+    public function testHandlingExportThatFailsMarksJobAsFailedWithoutExposingTheError(): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithExportJobAndCompanyMate(ExportType::USERS, ['role' => 'ROLE_BOGUS']);
+
+        $handler = static::getContainer()->get(ExportMessageHandler::class);
+        $handler(new ExportMessage($scenario->exportJob->getId()));
+
+        self::assertSame(ExportStatus::FAILED, $scenario->exportJob->getStatus());
+        self::assertSame('No se pudo generar la exportación.', $scenario->exportJob->getErrorMessage());
+        self::assertNotNull($scenario->exportJob->getCompletedAt());
     }
 
     public function testHandlingMessageForNonExistentJobDoesNothing(): void

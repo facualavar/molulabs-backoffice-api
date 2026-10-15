@@ -26,7 +26,7 @@ final class XlsxExportWriter
         $filesystem = new Filesystem();
         $filesystem->mkdir($this->exportDirectory);
 
-        $filePath = rtrim($this->exportDirectory, '/') . '/' . $job->getType()->value . '_' . (new \DateTimeImmutable())->format('YmdHis') . '.xlsx';
+        $filePath = rtrim($this->exportDirectory, '/') . '/' . $job->getType()->value . '_' . $job->getId() . '_' . (new \DateTimeImmutable())->format('YmdHis') . '.xlsx';
 
         $writer = new Writer();
         $writer->openToFile($filePath);
