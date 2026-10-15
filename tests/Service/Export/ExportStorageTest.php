@@ -46,6 +46,20 @@ final class ExportStorageTest extends KernelTestCase
         $this->storage->readStream('storage_test_missing.xlsx');
     }
 
+    public function testTheDirectoriesItCreatesCanBeTraversedByOtherUsers(): void
+    {
+        // The worker that writes the files and the web server that serves them can run as different users.
+        $directory = 'storage_test_' . uniqid();
+        $fileName = $directory . '/file.xlsx';
+        $this->storage->upload($fileName, $this->localFile('xlsx content'));
+        $path = static::getContainer()->getParameter('app.storage_directory') . '/exports/' . $directory;
+
+        self::assertSame('0755', substr(sprintf('%o', fileperms($path)), -4));
+
+        $this->storage->delete($fileName);
+        rmdir($path);
+    }
+
     private function localFile(string $content): string
     {
         $path = tempnam(sys_get_temp_dir(), 'storage_test_');

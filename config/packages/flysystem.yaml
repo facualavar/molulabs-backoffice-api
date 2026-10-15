@@ -4,6 +4,9 @@ when@dev:
     flysystem:
         storages:
             exports.storage:
+                # The worker that writes the files and the web server that serves them can run as
+                # different users: both must be able to enter the directories.
+                directory_visibility: public
                 local:
                     directory: '%app.storage_directory%/exports'
 
@@ -11,6 +14,7 @@ when@test:
     flysystem:
         storages:
             exports.storage:
+                directory_visibility: public
                 local:
                     directory: '%app.storage_directory%/exports'
 
