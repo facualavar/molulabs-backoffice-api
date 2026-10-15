@@ -32,11 +32,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100)]
     private ?string $email = null;
 
-    /**
-     * @var list<string> The user roles
-     */
-    #[ORM\Column(type: 'jsonb')]
-    private array $roles = [];
+    #[ORM\Column(length: 20, enumType: UserRole::class)]
+    private UserRole $role;
 
     #[ORM\Column]
     private ?string $password = null;
@@ -56,7 +53,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->document = new Document(DocumentType::DNI, $documentNumber);
         $this->password = $password;
         $this->company = $company;
-        $this->roles = [$role->value];
+        $this->role = $role;
     }
 
     public function getId(): ?int
@@ -121,30 +118,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
+        return [$this->role->value];
     }
 
     public function getRole(): UserRole
     {
-        return UserRole::from($this->roles[0]);
+        return $this->role;
     }
 
     public function setRole(UserRole $role): void
     {
-        $this->roles = [$role->value];
+        $this->role = $role;
     }
 
     public function isSuperAdmin(): bool
     {
-        return $this->getRole() === UserRole::SUPERADMIN;
+        return $this->role === UserRole::SUPERADMIN;
     }
 
     public function isPlainUser(): bool
     {
-        return $this->getRole() === UserRole::USER;
+        return $this->role === UserRole::USER;
     }
 
     /**

@@ -83,8 +83,8 @@ class UserRepository extends ServiceEntityRepository
 
         if ($role) {
             $queryBuilder
-                ->andWhere('u.roles = :role')
-                ->setParameter('role', [$role->value], 'jsonb');
+                ->andWhere('u.role = :role')
+                ->setParameter('role', $role);
         }
 
         if ($documentNumber) {
@@ -95,8 +95,8 @@ class UserRepository extends ServiceEntityRepository
 
         if (!$includeSuperAdmins) {
             $queryBuilder
-                ->andWhere('u.roles != :excludedRole')
-                ->setParameter('excludedRole', [UserRole::SUPERADMIN->value], 'jsonb');
+                ->andWhere('u.role != :excludedRole')
+                ->setParameter('excludedRole', UserRole::SUPERADMIN);
         }
 
         return $queryBuilder;
