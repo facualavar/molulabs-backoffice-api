@@ -1,0 +1,24 @@
+# One storage per purpose. Development keeps each in its own local directory; production keeps them
+# all in the same S3 bucket, each under its own prefix.
+when@dev:
+    flysystem:
+        storages:
+            exports.storage:
+                local:
+                    directory: '%app.storage_directory%/exports'
+
+when@test:
+    flysystem:
+        storages:
+            exports.storage:
+                local:
+                    directory: '%app.storage_directory%/exports'
+
+when@prod:
+    flysystem:
+        storages:
+            exports.storage:
+                aws:
+                    client: 'Aws\S3\S3Client'
+                    bucket: '%env(AWS_S3_BUCKET)%'
+                    prefix: 'exports'

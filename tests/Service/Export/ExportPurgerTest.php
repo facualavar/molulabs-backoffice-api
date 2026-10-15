@@ -4,7 +4,7 @@ namespace App\Tests\Service\Export;
 
 use App\Entity\ExportJob;
 use App\Service\Export\ExportPurger;
-use App\Service\Export\ExportStorage;
+use App\Tests\ExportFiles;
 use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -32,27 +32,27 @@ final class ExportPurgerTest extends KernelTestCase
     public function testPurgingDeletesTheFileOfAnExportCompletedBeforeTheLimit(): void
     {
         $job = $this->persistedTestObjects->adminWithOwnExportJob()->exportJob;
-        $path = $this->storeFileFor($job);
+        $fileName = $this->storeFileFor($job);
 
         $deleted = $this->purger()->purgeCompletedBefore(new \DateTimeImmutable('+1 day'));
 
         self::assertSame(1, $deleted);
-        self::assertFileDoesNotExist($path);
+        self::assertFalse(ExportFiles::in(static::getContainer())->exists($fileName));
         self::assertNull($job->getFileName());
     }
 
     public function testPurgingKeepsTheFileOfAnExportCompletedAfterTheLimit(): void
     {
         $job = $this->persistedTestObjects->adminWithOwnExportJob()->exportJob;
-        $path = $this->storeFileFor($job);
+        $fileName = $this->storeFileFor($job);
 
         $deleted = $this->purger()->purgeCompletedBefore(new \DateTimeImmutable('-1 day'));
 
         self::assertSame(0, $deleted);
-        self::assertFileExists($path);
+        self::assertTrue(ExportFiles::in(static::getContainer())->exists($fileName));
         self::assertNotNull($job->getFileName());
 
-        unlink($path);
+        ExportFiles::in(static::getContainer())->delete($fileName);
     }
 
     public function testPurgingIgnoresAnExportWithoutFile(): void
@@ -71,16 +71,11 @@ final class ExportPurgerTest extends KernelTestCase
 
     private function storeFileFor(ExportJob $job): string
     {
-        $storage = static::getContainer()->get(ExportStorage::class);
-        $storage->prepare();
-
-        $fileName = 'purge_test_' . uniqid() . '.xlsx';
-        $path = $storage->pathOf($fileName);
-        file_put_contents($path, 'fake xlsx content');
+        $fileName = ExportFiles::in(static::getContainer())->store();
 
         $job->markAsReady($fileName);
         $this->entityManager->flush();
 
-        return $path;
+        return $fileName;
     }
 }

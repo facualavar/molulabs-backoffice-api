@@ -3,33 +3,54 @@
 namespace App\Tests\Service\Export;
 
 use App\Service\Export\ExportStorage;
-use PHPUnit\Framework\TestCase;
+use League\Flysystem\UnableToReadFile;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-final class ExportStorageTest extends TestCase
+final class ExportStorageTest extends KernelTestCase
 {
-    public function testResolvingAFileNameJoinsItToTheDirectory(): void
-    {
-        $storage = new ExportStorage('/var/exports');
+    private ExportStorage $storage;
 
-        self::assertSame('/var/exports/users_1.xlsx', $storage->pathOf('users_1.xlsx'));
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->storage = static::getContainer()->get(ExportStorage::class);
     }
 
-    public function testResolvingAFileNameIgnoresTheTrailingSlashOfTheDirectory(): void
+    public function testAnUploadedFileCanBeReadBack(): void
     {
-        $storage = new ExportStorage('/var/exports/');
+        $fileName = 'storage_test_' . uniqid() . '.xlsx';
 
-        self::assertSame('/var/exports/users_1.xlsx', $storage->pathOf('users_1.xlsx'));
+        $this->storage->upload($fileName, $this->localFile('xlsx content'));
+
+        self::assertSame('xlsx content', stream_get_contents($this->storage->readStream($fileName)));
+
+        $this->storage->delete($fileName);
     }
 
-    public function testPreparingCreatesTheDirectory(): void
+    public function testADeletedFileNoLongerExists(): void
     {
-        $directory = sys_get_temp_dir() . '/export_storage_' . uniqid();
-        $storage = new ExportStorage($directory);
+        $fileName = 'storage_test_' . uniqid() . '.xlsx';
+        $this->storage->upload($fileName, $this->localFile('xlsx content'));
 
-        $storage->prepare();
+        $this->storage->delete($fileName);
 
-        self::assertDirectoryExists($directory);
+        $this->expectException(UnableToReadFile::class);
+        $this->storage->readStream($fileName);
+    }
 
-        rmdir($directory);
+    public function testDeletingAFileThatDoesNotExistDoesNothing(): void
+    {
+        $this->storage->delete('storage_test_missing.xlsx');
+
+        $this->expectException(UnableToReadFile::class);
+        $this->storage->readStream('storage_test_missing.xlsx');
+    }
+
+    private function localFile(string $content): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'storage_test_');
+        file_put_contents($path, $content);
+
+        return $path;
     }
 }

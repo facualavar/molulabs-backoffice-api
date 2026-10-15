@@ -7,11 +7,10 @@ use App\Enum\ExportStatus;
 use App\Enum\ExportType;
 use App\Message\ExportMessage;
 use App\MessageHandler\ExportMessageHandler;
-use App\Service\Export\ExportStorage;
+use App\Tests\ExportFiles;
 use App\Tests\PersistedTestObjects;
 use App\Tests\TestObjects;
 use Doctrine\ORM\EntityManagerInterface;
-use OpenSpout\Reader\XLSX\Reader;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class ExportMessageHandlerTest extends KernelTestCase
@@ -40,9 +39,9 @@ final class ExportMessageHandlerTest extends KernelTestCase
 
         self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
         self::assertNotNull($scenario->exportJob->getFileName());
-        self::assertFileExists($this->pathOf($scenario->exportJob));
+        self::assertTrue($this->files()->exists($scenario->exportJob->getFileName()));
 
-        unlink($this->pathOf($scenario->exportJob));
+        $this->files()->delete($scenario->exportJob->getFileName());
     }
 
     public function testHandlingCompaniesExportMarksJobAsReadyAndWritesFile(): void
@@ -54,9 +53,9 @@ final class ExportMessageHandlerTest extends KernelTestCase
 
         self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
         self::assertNotNull($scenario->exportJob->getFileName());
-        self::assertFileExists($this->pathOf($scenario->exportJob));
+        self::assertTrue($this->files()->exists($scenario->exportJob->getFileName()));
 
-        unlink($this->pathOf($scenario->exportJob));
+        $this->files()->delete($scenario->exportJob->getFileName());
     }
 
     public function testHandlingUsersExportFilteredByDocumentNumberOnlyWritesMatchingUsers(): void
@@ -66,7 +65,7 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler = static::getContainer()->get(ExportMessageHandler::class);
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
-        self::assertSame([$scenario->admin->getId()], array_column($this->readDataRows($this->pathOf($scenario->exportJob)), 0));
+        self::assertSame([$scenario->admin->getId()], array_column($this->dataRowsOf($scenario->exportJob), 0));
     }
 
     public function testHandlingCompaniesExportFilteredByDocumentNumberOnlyWritesMatchingCompanies(): void
@@ -76,7 +75,7 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler = static::getContainer()->get(ExportMessageHandler::class);
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
-        self::assertSame(['30-71234567-1'], array_column($this->readDataRows($this->pathOf($scenario->exportJob)), 4));
+        self::assertSame(['30-71234567-1'], array_column($this->dataRowsOf($scenario->exportJob), 4));
     }
 
     public function testHandlingTwoExportsOfTheSameTypeWritesDifferentFiles(): void
@@ -94,8 +93,8 @@ final class ExportMessageHandlerTest extends KernelTestCase
         self::assertNotSame($first->exportJob->getFileName(), $secondJob->getFileName());
         self::assertStringContainsString('_' . $first->exportJob->getId() . '_', $first->exportJob->getFileName());
 
-        unlink($this->pathOf($first->exportJob));
-        unlink($this->pathOf($secondJob));
+        $this->files()->delete($first->exportJob->getFileName());
+        $this->files()->delete($secondJob->getFileName());
     }
 
     public function testHandlingExportThatFailsMarksJobAsFailedWithoutExposingTheError(): void
@@ -119,9 +118,9 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $this->addToAssertionCount(1);
     }
 
-    private function pathOf(ExportJob $job): string
+    private function files(): ExportFiles
     {
-        return static::getContainer()->get(ExportStorage::class)->pathOf($job->getFileName());
+        return ExportFiles::in(static::getContainer());
     }
 
     /**
@@ -129,22 +128,8 @@ final class ExportMessageHandlerTest extends KernelTestCase
      *
      * @return list<list<mixed>>
      */
-    private function readDataRows(string $filePath): array
+    private function dataRowsOf(ExportJob $job): array
     {
-        $reader = new Reader();
-        $reader->open($filePath);
-
-        $rows = [];
-
-        foreach ($reader->getSheetIterator() as $sheet) {
-            foreach ($sheet->getRowIterator() as $row) {
-                $rows[] = $row->toArray();
-            }
-        }
-
-        $reader->close();
-        unlink($filePath);
-
-        return array_slice($rows, 1);
+        return array_slice($this->files()->takeRows($job->getFileName()), 1);
     }
 }

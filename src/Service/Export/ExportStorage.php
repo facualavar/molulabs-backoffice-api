@@ -2,31 +2,43 @@
 
 namespace App\Service\Export;
 
+use League\Flysystem\FilesystemOperator;
+use League\Flysystem\UnableToReadFile;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * Where the export files live. Jobs store the file name only, so the directory can move without
- * leaving broken paths in the database.
+ * Where the export files live: a local directory in development, S3 in production. Jobs store the
+ * file name only, so the location can change without leaving broken paths in the database.
  */
 final class ExportStorage
 {
     public function __construct(
-        #[Autowire('%app.export_directory%')] private readonly string $exportDirectory,
+        #[Autowire(service: 'exports.storage')] private readonly FilesystemOperator $storage,
     ) {}
 
-    public function pathOf(string $fileName): string
+    public function upload(string $fileName, string $localPath): void
     {
-        return rtrim($this->exportDirectory, '/') . '/' . $fileName;
+        $stream = fopen($localPath, 'rb');
+
+        try {
+            $this->storage->writeStream($fileName, $stream);
+        } finally {
+            fclose($stream);
+        }
+    }
+
+    /**
+     * @return resource
+     *
+     * @throws UnableToReadFile when the file is not in the storage
+     */
+    public function readStream(string $fileName)
+    {
+        return $this->storage->readStream($fileName);
     }
 
     public function delete(string $fileName): void
     {
-        (new Filesystem())->remove($this->pathOf($fileName));
-    }
-
-    public function prepare(): void
-    {
-        (new Filesystem())->mkdir($this->exportDirectory);
+        $this->storage->delete($fileName);
     }
 }

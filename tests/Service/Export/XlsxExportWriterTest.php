@@ -4,11 +4,10 @@ namespace App\Tests\Service\Export;
 
 use App\Entity\ExportJob;
 use App\Enum\ExportType;
-use App\Service\Export\ExportStorage;
 use App\Service\Export\XlsxExportWriter;
+use App\Tests\ExportFiles;
 use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
-use OpenSpout\Reader\XLSX\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -33,14 +32,12 @@ final class XlsxExportWriterTest extends KernelTestCase
     {
         [$admin, $superAdmin, $exportJob] = $this->persistedTestObjects->adminWithSuperAdminCompanyMateAndExportJob(ExportType::USERS);
 
-        $filePath = $this->write($exportJob);
+        $fileName = $this->write($exportJob);
 
-        $ids = array_column($this->readRows($filePath), 0);
+        $ids = array_column($this->files()->takeRows($fileName), 0);
 
         self::assertContains($admin->getId(), $ids);
         self::assertNotContains($superAdmin->getId(), $ids);
-
-        unlink($filePath);
     }
 
     /**
@@ -58,25 +55,27 @@ final class XlsxExportWriterTest extends KernelTestCase
     {
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob($type);
 
-        $filePath = $this->write($scenario->exportJob);
+        $fileName = $this->write($scenario->exportJob);
 
-        self::assertFileExists($filePath);
+        self::assertTrue($this->files()->exists($fileName));
 
-        unlink($filePath);
+        $this->files()->delete($fileName);
     }
 
     public function testWritingAnExportThatFailsLeavesNoFileBehind(): void
     {
         $scenario = $this->persistedTestObjects->adminWithExportJobAndCompanyMate(ExportType::USERS, ['role' => 'ROLE_BOGUS']);
         $writer = static::getContainer()->get(XlsxExportWriter::class);
+        $temporaryFilesBefore = glob(sys_get_temp_dir() . '/export_*');
 
         try {
             $writer->write($scenario->exportJob);
             self::fail('The export was expected to fail.');
         } catch (\ValueError) {
-            $leftovers = glob(static::getContainer()->get(ExportStorage::class)->pathOf('users_' . $scenario->exportJob->getId() . '_*'));
+            $storedFiles = glob(static::getContainer()->getParameter('app.storage_directory') . '/exports/users_' . $scenario->exportJob->getId() . '_*');
 
-            self::assertSame([], $leftovers);
+            self::assertSame([], $storedFiles);
+            self::assertSame($temporaryFilesBefore, glob(sys_get_temp_dir() . '/export_*'));
         }
     }
 
@@ -85,9 +84,9 @@ final class XlsxExportWriterTest extends KernelTestCase
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::USERS);
         $admin = $scenario->admin;
 
-        $filePath = $this->write($scenario->exportJob);
+        $fileName = $this->write($scenario->exportJob);
 
-        $rows = $this->readRows($filePath);
+        $rows = $this->files()->takeRows($fileName);
 
         self::assertSame(['ID', 'Nombre', 'Apellido', 'Email', 'Rol', 'Empresa'], $rows[0]);
         self::assertSame([
@@ -99,7 +98,6 @@ final class XlsxExportWriterTest extends KernelTestCase
             $admin->getCompany()->getName(),
         ], $rows[1]);
 
-        unlink($filePath);
     }
 
     public function testWritingCompaniesExportWritesEveryColumnOfTheCompany(): void
@@ -107,9 +105,9 @@ final class XlsxExportWriterTest extends KernelTestCase
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::COMPANIES);
         $company = $scenario->admin->getCompany();
 
-        $filePath = $this->write($scenario->exportJob);
+        $fileName = $this->write($scenario->exportJob);
 
-        $rows = $this->readRows($filePath);
+        $rows = $this->files()->takeRows($fileName);
 
         self::assertSame(['ID', 'Nombre', 'Email', 'Tipo de Documento', 'Número de Documento', 'Teléfono', 'Fecha de Creación'], $rows[0]);
         self::assertSame([
@@ -122,33 +120,15 @@ final class XlsxExportWriterTest extends KernelTestCase
             $company->getCreatedAt()->format('Y-m-d H:i:s'),
         ], $rows[1]);
 
-        unlink($filePath);
     }
 
     private function write(ExportJob $job): string
     {
-        $fileName = static::getContainer()->get(XlsxExportWriter::class)->write($job);
-
-        return static::getContainer()->get(ExportStorage::class)->pathOf($fileName);
+        return static::getContainer()->get(XlsxExportWriter::class)->write($job);
     }
 
-    /**
-     * @return list<list<scalar>>
-     */
-    private function readRows(string $filePath): array
+    private function files(): ExportFiles
     {
-        $reader = new Reader();
-        $reader->open($filePath);
-
-        $rows = [];
-        foreach ($reader->getSheetIterator() as $sheet) {
-            foreach ($sheet->getRowIterator() as $row) {
-                $rows[] = $row->toArray();
-            }
-        }
-
-        $reader->close();
-
-        return $rows;
+        return ExportFiles::in(static::getContainer());
     }
 }

@@ -9,10 +9,11 @@ use App\Exception\ExportNotReadyException;
 use App\Http\NotFoundMessage;
 use App\Security\Voter\ExportJobVoter;
 use App\Service\Export\ExportStorage;
+use League\Flysystem\UnableToReadFile;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -29,7 +30,7 @@ final class ExportController extends AbstractController
 
     #[Route('/{exportJob}/download', name: 'export_download', methods: ['GET'])]
     #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: NotFoundMessage::EXPORT)]
-    public function download(ExportJob $exportJob, ExportStorage $storage): BinaryFileResponse
+    public function download(ExportJob $exportJob, ExportStorage $storage): StreamedResponse
     {
         $fileName = $exportJob->getFileName();
 
@@ -37,14 +38,22 @@ final class ExportController extends AbstractController
             throw new ExportNotReadyException();
         }
 
-        $response = new BinaryFileResponse($storage->pathOf($fileName), 200, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
-        $response->setContentDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            $fileName,
-        );
+        try {
+            $input = $storage->readStream($fileName);
+        } catch (UnableToReadFile) {
+            throw new ExportNotReadyException();
+        }
 
-        return $response;
+        return new StreamedResponse(
+            static function () use ($input): void {
+                fpassthru($input);
+                fclose($input);
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $fileName),
+            ],
+        );
     }
 }

@@ -2,9 +2,9 @@
 
 namespace App\Tests\Controller;
 
-use App\Tests\PersistedTestObjects;
 use App\Service\Export\ExportPurger;
-use App\Service\Export\ExportStorage;
+use App\Tests\ExportFiles;
+use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class ExportControllerTest extends CustomWebTestCase
@@ -74,11 +74,7 @@ final class ExportControllerTest extends CustomWebTestCase
     {
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
 
-        $storage = static::getContainer()->get(ExportStorage::class);
-        $storage->prepare();
-        $fileName = 'export_test_' . uniqid() . '.xlsx';
-        $filePath = $storage->pathOf($fileName);
-        file_put_contents($filePath, 'fake xlsx content');
+        $fileName = ExportFiles::in(static::getContainer())->store();
         $scenario->exportJob->markAsReady($fileName);
         $this->entityManager->flush();
 
@@ -88,18 +84,16 @@ final class ExportControllerTest extends CustomWebTestCase
 
         self::assertResponseIsOk();
         self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=' . $fileName);
+        self::assertSame('fake xlsx content', $this->client->getInternalResponse()->getContent());
 
-        unlink($filePath);
+        ExportFiles::in(static::getContainer())->delete($fileName);
     }
 
     public function testDownloadingAnExportWhoseFileWasPurgedReturnsNotFound(): void
     {
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
 
-        $storage = static::getContainer()->get(ExportStorage::class);
-        $storage->prepare();
-        $fileName = 'export_test_' . uniqid() . '.xlsx';
-        file_put_contents($storage->pathOf($fileName), 'fake xlsx content');
+        $fileName = ExportFiles::in(static::getContainer())->store();
         $scenario->exportJob->markAsReady($fileName);
         $this->entityManager->flush();
 

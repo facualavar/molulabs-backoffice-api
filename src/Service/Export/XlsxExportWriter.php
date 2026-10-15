@@ -28,20 +28,21 @@ final class XlsxExportWriter
     }
 
     /**
-     * @return string the name of the written file, relative to the export storage
+     * @return string the name of the file written to the export storage
      */
     public function write(ExportJob $job): string
     {
         $exporter = $this->exporterFor($job->getType());
 
-        $this->storage->prepare();
-
         $fileName = $job->getType()->value . '_' . $job->getId() . '_' . (new \DateTimeImmutable())->format('YmdHis') . '.xlsx';
 
+        // OpenSpout writes to a local file; it is uploaded only once complete, so a failed export
+        // leaves nothing in the storage.
+        $localPath = tempnam(sys_get_temp_dir(), 'export_');
         $writer = new Writer();
 
         try {
-            $writer->openToFile($this->storage->pathOf($fileName));
+            $writer->openToFile($localPath);
             $writer->addRow(Row::fromValues($exporter->headers()));
 
             foreach ($exporter->rows($job) as $row) {
@@ -49,27 +50,26 @@ final class XlsxExportWriter
             }
 
             $writer->close();
+
+            $this->storage->upload($fileName, $localPath);
         } catch (\Throwable $exception) {
-            $this->discard($writer, $fileName);
+            $this->closeQuietly($writer);
 
             throw $exception;
+        } finally {
+            unlink($localPath);
         }
 
         return $fileName;
     }
 
-    /**
-     * A failed export leaves no half-written file behind.
-     */
-    private function discard(Writer $writer, string $fileName): void
+    private function closeQuietly(Writer $writer): void
     {
         try {
             $writer->close();
         } catch (\Throwable) {
-            // The writer was never opened or already failed: only the file is left to remove.
+            // The writer was never opened or already closed: nothing else to release.
         }
-
-        $this->storage->delete($fileName);
     }
 
     private function exporterFor(ExportType $type): Exporter
