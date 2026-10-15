@@ -4,8 +4,6 @@ namespace App\Entity;
 
 use App\Enum\DocumentType;
 use App\Repository\CompanyRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
@@ -35,13 +33,7 @@ class Company
     private string $phone;
 
     #[ORM\Column]
-    private readonly \DateTimeImmutable $created_at;
-
-    /**
-     * @var Collection<int, User>
-     */
-    #[ORM\OneToMany(mappedBy: 'company', targetEntity: User::class)]
-    private Collection $users;
+    private readonly \DateTimeImmutable $createdAt;
 
     public function __construct(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone)
     {
@@ -49,8 +41,7 @@ class Company
         $this->email = $email;
         $this->document = new Document($documentType, $documentNumber);
         $this->phone = $phone;
-        $this->created_at = new \DateTimeImmutable();
-        $this->users = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -93,14 +84,6 @@ class Company
 
     public function getCreatedAt(): \DateTimeImmutable
     {
-        return $this->created_at;
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public function getUsers(): Collection
-    {
-        return $this->users;
+        return $this->createdAt;
     }
 }

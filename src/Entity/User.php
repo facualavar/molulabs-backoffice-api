@@ -41,7 +41,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Embedded(class: Document::class, columnPrefix: 'document_')]
     private Document $document;
 
-    #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'users', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: Company::class, fetch: 'EAGER')]
     #[ORM\JoinColumn(nullable: false)]
     private Company $company;
 
