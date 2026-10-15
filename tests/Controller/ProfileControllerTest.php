@@ -242,4 +242,36 @@ final class ProfileControllerTest extends CustomWebTestCase
 
         self::assertResponseIsUnauthorized();
     }
+
+    public function testShowingOwnCompanyOfAUserLoadedFromTheDatabaseReturnsCompanyData(): void
+    {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
+        $this->forgetPersistedEntities();
+
+        $this->getRequest('/api/profile/company');
+
+        self::assertResponseIsOk();
+        self::assertSame($user->getCompany()->getName(), $this->getResponseContent()['name']);
+    }
+
+    public function testUpdatingOwnCompanyOfAUserLoadedFromTheDatabaseReturnsUpdatedData(): void
+    {
+        $user = $this->persistedTestObjects->getAdminUser();
+        $this->loginAs($user);
+        $this->forgetPersistedEntities();
+
+        $this->putRequest('/api/profile/company', $this->companyPayload());
+
+        self::assertResponseIsOk();
+        self::assertSame('Updated Name', $this->getResponseContent()['name']);
+    }
+
+    /**
+     * The request must load the user, and its company, from the database as it does in production.
+     */
+    private function forgetPersistedEntities(): void
+    {
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
+    }
 }
