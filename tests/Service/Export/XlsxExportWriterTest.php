@@ -65,6 +65,21 @@ final class XlsxExportWriterTest extends KernelTestCase
         unlink($filePath);
     }
 
+    public function testWritingAnExportThatFailsLeavesNoFileBehind(): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithExportJobAndCompanyMate(ExportType::USERS, ['role' => 'ROLE_BOGUS']);
+        $writer = static::getContainer()->get(XlsxExportWriter::class);
+
+        try {
+            $writer->write($scenario->exportJob);
+            self::fail('The export was expected to fail.');
+        } catch (\ValueError) {
+            $leftovers = glob(static::getContainer()->get(ExportStorage::class)->pathOf('users_' . $scenario->exportJob->getId() . '_*'));
+
+            self::assertSame([], $leftovers);
+        }
+    }
+
     public function testWritingUsersExportWritesEveryColumnOfTheUser(): void
     {
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::USERS);

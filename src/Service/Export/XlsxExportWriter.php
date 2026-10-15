@@ -39,16 +39,37 @@ final class XlsxExportWriter
         $fileName = $job->getType()->value . '_' . $job->getId() . '_' . (new \DateTimeImmutable())->format('YmdHis') . '.xlsx';
 
         $writer = new Writer();
-        $writer->openToFile($this->storage->pathOf($fileName));
-        $writer->addRow(Row::fromValues($exporter->headers()));
 
-        foreach ($exporter->rows($job) as $row) {
-            $writer->addRow(Row::fromValues($row));
+        try {
+            $writer->openToFile($this->storage->pathOf($fileName));
+            $writer->addRow(Row::fromValues($exporter->headers()));
+
+            foreach ($exporter->rows($job) as $row) {
+                $writer->addRow(Row::fromValues($row));
+            }
+
+            $writer->close();
+        } catch (\Throwable $exception) {
+            $this->discard($writer, $fileName);
+
+            throw $exception;
         }
 
-        $writer->close();
-
         return $fileName;
+    }
+
+    /**
+     * A failed export leaves no half-written file behind.
+     */
+    private function discard(Writer $writer, string $fileName): void
+    {
+        try {
+            $writer->close();
+        } catch (\Throwable) {
+            // The writer was never opened or already failed: only the file is left to remove.
+        }
+
+        $this->storage->delete($fileName);
     }
 
     private function exporterFor(ExportType $type): Exporter

@@ -20,6 +20,11 @@ final class ExportStorage
         return rtrim($this->exportDirectory, '/') . '/' . $fileName;
     }
 
+    public function delete(string $fileName): void
+    {
+        (new Filesystem())->remove($this->pathOf($fileName));
+    }
+
     public function prepare(): void
     {
         (new Filesystem())->mkdir($this->exportDirectory);
