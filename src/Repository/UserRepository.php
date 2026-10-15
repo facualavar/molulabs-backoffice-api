@@ -40,6 +40,11 @@ class UserRepository extends ServiceEntityRepository
             ->toIterable();
     }
 
+    public function existsByCompany(Company $company): bool
+    {
+        return $this->count(['company' => $company]) > 0;
+    }
+
     public function findOneByDocumentNumber(string $documentNumber): ?User
     {
         return $this->createQueryBuilder('u')

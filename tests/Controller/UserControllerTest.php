@@ -559,4 +559,14 @@ final class UserControllerTest extends CustomWebTestCase
 
         self::assertResponseIsNoContent();
     }
+
+    public function testDeletingUserWithExportJobsReturnsConflict(): void
+    {
+        $this->loginAsSuperAdmin();
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
+
+        $this->deleteRequest('/api/users/' . $scenario->admin->getId());
+
+        self::assertResponseIsConflict();
+    }
 }

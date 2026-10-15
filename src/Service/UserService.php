@@ -9,6 +9,8 @@ use App\Exception\CannotAssignSuperAdminRoleException;
 use App\Exception\CannotDeleteOwnUserException;
 use App\Exception\DuplicateDocumentNumberException;
 use App\Exception\DuplicateEmailException;
+use App\Exception\UserHasExportJobsException;
+use App\Repository\ExportJobRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -20,6 +22,7 @@ final class UserService
         private EntityManagerInterface $entityManager,
         private AuthService $authService,
         private UserRepository $userRepository,
+        private ExportJobRepository $exportJobRepository,
     ) {}
 
     public function create(Company $company, string $firstname, string $lastname, string $email, string $documentNumber, string $password, UserRole $role): User
@@ -71,6 +74,10 @@ final class UserService
     {
         if ($user->getId() === $currentUser->getId()) {
             throw new CannotDeleteOwnUserException();
+        }
+
+        if ($this->exportJobRepository->existsByRequestedBy($user)) {
+            throw new UserHasExportJobsException();
         }
 
         $this->entityManager->remove($user);

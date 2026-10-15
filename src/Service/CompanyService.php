@@ -4,9 +4,11 @@ namespace App\Service;
 
 use App\Entity\Company;
 use App\Enum\DocumentType;
+use App\Exception\CompanyHasUsersException;
 use App\Exception\DuplicateDocumentNumberException;
 use App\Exception\DuplicateEmailException;
 use App\Repository\CompanyRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CompanyService
@@ -16,6 +18,7 @@ final class CompanyService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CompanyRepository $companyRepository,
+        private UserRepository $userRepository,
     ) {}
 
     public function create(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): Company
@@ -48,6 +51,10 @@ final class CompanyService
 
     public function delete(Company $company): void
     {
+        if ($this->userRepository->existsByCompany($company)) {
+            throw new CompanyHasUsersException();
+        }
+
         $this->entityManager->remove($company);
         $this->entityManager->flush();
     }

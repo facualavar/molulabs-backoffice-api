@@ -377,4 +377,14 @@ final class CompanyControllerTest extends CustomWebTestCase
 
         self::assertResponseIsNoContent();
     }
+
+    public function testDeletingCompanyWithUsersReturnsConflict(): void
+    {
+        $this->loginAsSuperAdmin();
+        $user = $this->persistedTestObjects->getUser();
+
+        $this->deleteRequest('/api/companies/' . $user->getCompany()->getId());
+
+        self::assertResponseIsConflict();
+    }
 }
