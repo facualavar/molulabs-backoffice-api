@@ -2,9 +2,10 @@
 
 namespace App\Service\Export;
 
+use App\Dto\Company\CompanyExportFilters;
+use App\Dto\User\UserExportFilters;
 use App\Entity\ExportJob;
 use App\Enum\ExportType;
-use App\Enum\UserRole;
 use App\Repository\CompanyRepository;
 use App\Repository\UserRepository;
 use OpenSpout\Common\Entity\Row;
@@ -63,9 +64,9 @@ final class XlsxExportWriter
 
     private function companyRows(ExportJob $job): iterable
     {
-        $filters = $job->getFilters();
+        $filters = CompanyExportFilters::fromArray($job->getFilters());
 
-        foreach ($this->companyRepository->iterateExportRowsByFilters($filters['name'] ?? null, $filters['documentNumber'] ?? null) as $company) {
+        foreach ($this->companyRepository->iterateExportRowsByFilters($filters->name, $filters->documentNumber) as $company) {
             yield [
                 $company['id'],
                 $company['name'],
@@ -80,10 +81,9 @@ final class XlsxExportWriter
 
     private function userRows(ExportJob $job): iterable
     {
-        $filters = $job->getFilters();
-        $role = isset($filters['role']) ? UserRole::from($filters['role']) : null;
+        $filters = UserExportFilters::fromArray($job->getFilters());
 
-        foreach ($this->userRepository->iterateExportRowsByFilters($job->getRequestedBy(), $filters['name'] ?? null, $role, $filters['documentNumber'] ?? null) as $user) {
+        foreach ($this->userRepository->iterateExportRowsByFilters($job->getRequestedBy(), $filters->name, $filters->role, $filters->documentNumber) as $user) {
             yield [
                 $user['id'],
                 $user['firstname'],

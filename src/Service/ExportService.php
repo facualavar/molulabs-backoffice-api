@@ -2,9 +2,9 @@
 
 namespace App\Service;
 
+use App\Dto\Export\ExportFilters;
 use App\Entity\ExportJob;
 use App\Entity\User;
-use App\Enum\ExportType;
 use App\Message\ExportMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -16,12 +16,9 @@ final class ExportService
         private MessageBusInterface $messageBus,
     ) {}
 
-    /**
-     * @param array<string, mixed> $filters
-     */
-    public function create(ExportType $type, array $filters, User $requestedBy): ExportJob
+    public function create(ExportFilters $filters, User $requestedBy): ExportJob
     {
-        $job = new ExportJob($type, $filters, $requestedBy);
+        $job = new ExportJob($filters->type(), $filters->toArray(), $requestedBy);
 
         $this->entityManager->persist($job);
         $this->entityManager->flush();

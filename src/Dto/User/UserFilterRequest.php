@@ -13,4 +13,9 @@ final class UserFilterRequest
         public readonly int $page = 1,
         public readonly int $limit = 20,
     ) {}
+
+    public function toExportFilters(): UserExportFilters
+    {
+        return new UserExportFilters($this->name, $this->role, $this->documentNumber);
+    }
 }

@@ -9,7 +9,6 @@ use App\Dto\User\UserRequest;
 use App\Dto\User\UserResponse;
 use App\Entity\Company;
 use App\Entity\User;
-use App\Enum\ExportType;
 use App\Exception\CompanyNotFoundException;
 use App\Http\NotFoundMessage;
 use App\Repository\CompanyRepository;
@@ -52,11 +51,7 @@ final class UserController extends AbstractController
     #[Route('/export', name: 'user_export', methods: ['POST'])]
     public function export(#[CurrentUser] User $currentUser, #[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
-        $job = $this->exportService->create(ExportType::USERS, [
-            'name' => $filter->name,
-            'role' => $filter->role?->value,
-            'documentNumber' => $filter->documentNumber,
-        ], $currentUser);
+        $job = $this->exportService->create($filter->toExportFilters(), $currentUser);
 
         return $this->json(ExportJobResponse::fromEntity($job), Response::HTTP_ACCEPTED);
     }

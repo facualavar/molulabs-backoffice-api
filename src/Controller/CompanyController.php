@@ -11,7 +11,6 @@ use App\Dto\Export\ExportJobResponse;
 use App\Dto\Pagination\PaginatedResponse;
 use App\Entity\Company;
 use App\Entity\User;
-use App\Enum\ExportType;
 use App\Repository\CompanyRepository;
 use App\Service\CompanyService;
 use App\Service\ExportService;
@@ -60,10 +59,7 @@ final class CompanyController extends AbstractController
     #[Route('/export', name: 'company_export', methods: ['POST'])]
     public function export(#[CurrentUser] User $currentUser, #[MapQueryString] CompanyFilterRequest $filter): JsonResponse
     {
-        $job = $this->exportService->create(ExportType::COMPANIES, [
-            'name' => $filter->name,
-            'documentNumber' => $filter->documentNumber,
-        ], $currentUser);
+        $job = $this->exportService->create($filter->toExportFilters(), $currentUser);
 
         return $this->json(ExportJobResponse::fromEntity($job), Response::HTTP_ACCEPTED);
     }

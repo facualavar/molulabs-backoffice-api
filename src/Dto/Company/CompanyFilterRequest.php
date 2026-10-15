@@ -10,4 +10,9 @@ final class CompanyFilterRequest
         public readonly int $page = 1,
         public readonly int $limit = 20,
     ) {}
+
+    public function toExportFilters(): CompanyExportFilters
+    {
+        return new CompanyExportFilters($this->name, $this->documentNumber);
+    }
 }
