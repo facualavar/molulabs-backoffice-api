@@ -26,6 +26,10 @@ final class UniqueValueGuard
      * and race to insert the same value. The loser hits the unique index: turn that violation into
      * the same domain exception the lookup would have thrown, instead of a 500.
      *
+     * Which constraint was hit is read from the message text: SQLSTATE only says "unique violation",
+     * and pdo_pgsql does not expose PostgreSQL's structured constraint name. DuplicateRaceTest runs
+     * against the real database, so it fails if that message format ever changes.
+     *
      * @param array<string, callable(): \Throwable> $exceptionsByConstraint keyed by unique constraint name
      */
     public function flush(array $exceptionsByConstraint): void
