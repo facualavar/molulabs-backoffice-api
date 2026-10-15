@@ -24,19 +24,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $firstname = null;
+    private string $firstname;
 
     #[ORM\Column(length: 50)]
-    private ?string $lastname = null;
+    private string $lastname;
 
     #[ORM\Column(length: 100)]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(length: 20, enumType: UserRole::class)]
     private UserRole $role;
 
     #[ORM\Column]
-    private ?string $password = null;
+    private string $password;
 
     #[ORM\Embedded(class: Document::class, columnPrefix: 'document_')]
     private Document $document;
@@ -61,24 +61,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function getFirstname(): ?string
+    public function getFirstname(): string
     {
         return $this->firstname;
     }
 
-    public function setFirstname(string $firstname): void
-    {
-        $this->firstname = $firstname;
-    }
-
-    public function getLastname(): ?string
+    public function getLastname(): string
     {
         return $this->lastname;
-    }
-
-    public function setLastname(string $lastname): void
-    {
-        $this->lastname = $lastname;
     }
 
     public function getFullName(): string
@@ -86,24 +76,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return trim($this->firstname . ' ' . $this->lastname);
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
-    }
-
-    public function setEmail(string $email): void
-    {
-        $this->email = $email;
     }
 
     public function getDocumentNumber(): string
     {
         return $this->document->getNumber();
-    }
-
-    public function setDocumentNumber(string $documentNumber): void
-    {
-        $this->document = new Document(DocumentType::DNI, $documentNumber);
     }
 
     public function getCompany(): Company
@@ -113,7 +93,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return $this->email;
     }
 
     public function getRoles(): array
@@ -126,8 +106,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->role;
     }
 
-    public function setRole(UserRole $role): void
+    public function updateProfile(string $firstname, string $lastname, string $email, string $documentNumber, UserRole $role): void
     {
+        $this->firstname = $firstname;
+        $this->lastname = $lastname;
+        $this->email = $email;
+        $this->document = new Document(DocumentType::DNI, $documentNumber);
         $this->role = $role;
     }
 
@@ -153,7 +137,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return !$target->isSuperAdmin() && $target->company->getId() === $this->company->getId();
     }
 
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }

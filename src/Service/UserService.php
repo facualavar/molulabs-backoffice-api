@@ -45,11 +45,7 @@ final class UserService
             $this->assertAssignableRole($role);
         }
 
-        $user->setFirstname($firstname);
-        $user->setLastname($lastname);
-        $user->setEmail($email);
-        $user->setDocumentNumber($documentNumber);
-        $user->setRole($role);
+        $user->updateProfile($firstname, $lastname, $email, $documentNumber, $role);
 
         $this->assertIsUnique($user);
 

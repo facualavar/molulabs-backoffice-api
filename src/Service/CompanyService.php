@@ -34,10 +34,7 @@ final class CompanyService
 
     public function update(Company $company, string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): Company
     {
-        $company->setName($name);
-        $company->setEmail($email);
-        $company->setDocument($documentType, $documentNumber);
-        $company->setPhone($phone);
+        $company->update($name, $email, $documentType, $documentNumber, $phone);
 
         $this->assertIsUnique($company);
 

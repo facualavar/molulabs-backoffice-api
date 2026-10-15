@@ -63,19 +63,9 @@ class Company
         return $this->name;
     }
 
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
-
     public function getEmail(): string
     {
         return $this->email;
-    }
-
-    public function setEmail(string $email): void
-    {
-        $this->email = $email;
     }
 
     public function getDocumentType(): DocumentType
@@ -88,19 +78,17 @@ class Company
         return $this->document->getNumber();
     }
 
-    public function setDocument(DocumentType $documentType, string $documentNumber): void
+    public function update(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): void
     {
+        $this->name = $name;
+        $this->email = $email;
         $this->document = new Document($documentType, $documentNumber);
+        $this->phone = $phone;
     }
 
     public function getPhone(): string
     {
         return $this->phone;
-    }
-
-    public function setPhone(string $phone): void
-    {
-        $this->phone = $phone;
     }
 
     public function getCreatedAt(): \DateTimeImmutable
