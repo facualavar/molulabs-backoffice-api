@@ -7,6 +7,7 @@ use App\Service\Export\XlsxExportWriter;
 use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenSpout\Reader\XLSX\Reader;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class XlsxExportWriterTest extends KernelTestCase
@@ -37,6 +38,29 @@ final class XlsxExportWriterTest extends KernelTestCase
 
         self::assertContains($admin->getId(), $ids);
         self::assertNotContains($superAdmin->getId(), $ids);
+
+        unlink($filePath);
+    }
+
+    /**
+     * @return iterable<string, array{ExportType}>
+     */
+    public static function exportTypes(): iterable
+    {
+        foreach (ExportType::cases() as $type) {
+            yield $type->value => [$type];
+        }
+    }
+
+    #[DataProvider('exportTypes')]
+    public function testWritingAnExportOfAnyTypeProducesAFile(ExportType $type): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob($type);
+
+        $writer = static::getContainer()->get(XlsxExportWriter::class);
+        $filePath = $writer->write($scenario->exportJob);
+
+        self::assertFileExists($filePath);
 
         unlink($filePath);
     }
