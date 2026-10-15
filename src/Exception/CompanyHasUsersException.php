@@ -8,8 +8,10 @@ use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 #[WithHttpStatus(Response::HTTP_CONFLICT)]
 final class CompanyHasUsersException extends \DomainException
 {
+    private const MESSAGE = 'La empresa tiene usuarios y no puede eliminarse.';
+
     public function __construct()
     {
-        parent::__construct('La empresa tiene usuarios y no puede eliminarse.');
+        parent::__construct(self::MESSAGE);
     }
 }

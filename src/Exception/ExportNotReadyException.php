@@ -8,8 +8,10 @@ use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 #[WithHttpStatus(Response::HTTP_NOT_FOUND)]
 final class ExportNotReadyException extends \DomainException
 {
+    private const MESSAGE = 'La exportación no está lista.';
+
     public function __construct()
     {
-        parent::__construct('La exportación no está lista.');
+        parent::__construct(self::MESSAGE);
     }
 }
