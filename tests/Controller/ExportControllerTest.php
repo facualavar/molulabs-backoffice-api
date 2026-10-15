@@ -3,6 +3,7 @@
 namespace App\Tests\Controller;
 
 use App\Tests\PersistedTestObjects;
+use App\Service\Export\ExportStorage;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class ExportControllerTest extends CustomWebTestCase
@@ -72,9 +73,12 @@ final class ExportControllerTest extends CustomWebTestCase
     {
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
 
-        $filePath = tempnam(sys_get_temp_dir(), 'export_test_');
+        $storage = static::getContainer()->get(ExportStorage::class);
+        $storage->prepare();
+        $fileName = 'export_test_' . uniqid() . '.xlsx';
+        $filePath = $storage->pathOf($fileName);
         file_put_contents($filePath, 'fake xlsx content');
-        $scenario->exportJob->markAsReady($filePath);
+        $scenario->exportJob->markAsReady($fileName);
         $this->entityManager->flush();
 
         $this->loginAs($scenario->admin);
@@ -82,7 +86,7 @@ final class ExportControllerTest extends CustomWebTestCase
         $this->getRequest('/api/exports/' . $scenario->exportJob->getId() . '/download');
 
         self::assertResponseIsOk();
-        self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=' . basename($filePath));
+        self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=' . $fileName);
 
         unlink($filePath);
     }

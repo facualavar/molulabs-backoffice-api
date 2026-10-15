@@ -7,7 +7,6 @@ use App\Enum\ExportType;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
-use Symfony\Component\Filesystem\Filesystem;
 
 final class XlsxExportWriter
 {
@@ -21,24 +20,26 @@ final class XlsxExportWriter
      */
     public function __construct(
         #[AutowireIterator(Exporter::TAG)] iterable $exporters,
-        private readonly string $exportDirectory,
+        private readonly ExportStorage $storage,
     ) {
         foreach ($exporters as $exporter) {
             $this->exporters[$exporter->type()->value] = $exporter;
         }
     }
 
+    /**
+     * @return string the name of the written file, relative to the export storage
+     */
     public function write(ExportJob $job): string
     {
         $exporter = $this->exporterFor($job->getType());
 
-        $filesystem = new Filesystem();
-        $filesystem->mkdir($this->exportDirectory);
+        $this->storage->prepare();
 
-        $filePath = rtrim($this->exportDirectory, '/') . '/' . $job->getType()->value . '_' . $job->getId() . '_' . (new \DateTimeImmutable())->format('YmdHis') . '.xlsx';
+        $fileName = $job->getType()->value . '_' . $job->getId() . '_' . (new \DateTimeImmutable())->format('YmdHis') . '.xlsx';
 
         $writer = new Writer();
-        $writer->openToFile($filePath);
+        $writer->openToFile($this->storage->pathOf($fileName));
         $writer->addRow(Row::fromValues($exporter->headers()));
 
         foreach ($exporter->rows($job) as $row) {
@@ -47,7 +48,7 @@ final class XlsxExportWriter
 
         $writer->close();
 
-        return $filePath;
+        return $fileName;
     }
 
     private function exporterFor(ExportType $type): Exporter

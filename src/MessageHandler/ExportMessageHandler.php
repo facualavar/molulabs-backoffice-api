@@ -33,9 +33,9 @@ final class ExportMessageHandler
         $this->entityManager->flush();
 
         try {
-            $filePath = $this->writer->write($job);
+            $fileName = $this->writer->write($job);
 
-            $job->markAsReady($filePath);
+            $job->markAsReady($fileName);
         } catch (\Throwable $exception) {
             $this->logger->error('Export job {id} failed.', ['id' => $job->getId(), 'exception' => $exception]);
 

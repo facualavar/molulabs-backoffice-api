@@ -2,7 +2,9 @@
 
 namespace App\Tests\Service\Export;
 
+use App\Entity\ExportJob;
 use App\Enum\ExportType;
+use App\Service\Export\ExportStorage;
 use App\Service\Export\XlsxExportWriter;
 use App\Tests\PersistedTestObjects;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,8 +33,7 @@ final class XlsxExportWriterTest extends KernelTestCase
     {
         [$admin, $superAdmin, $exportJob] = $this->persistedTestObjects->adminWithSuperAdminCompanyMateAndExportJob(ExportType::USERS);
 
-        $writer = static::getContainer()->get(XlsxExportWriter::class);
-        $filePath = $writer->write($exportJob);
+        $filePath = $this->write($exportJob);
 
         $ids = array_column($this->readRows($filePath), 0);
 
@@ -57,8 +58,7 @@ final class XlsxExportWriterTest extends KernelTestCase
     {
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob($type);
 
-        $writer = static::getContainer()->get(XlsxExportWriter::class);
-        $filePath = $writer->write($scenario->exportJob);
+        $filePath = $this->write($scenario->exportJob);
 
         self::assertFileExists($filePath);
 
@@ -70,8 +70,7 @@ final class XlsxExportWriterTest extends KernelTestCase
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::USERS);
         $admin = $scenario->admin;
 
-        $writer = static::getContainer()->get(XlsxExportWriter::class);
-        $filePath = $writer->write($scenario->exportJob);
+        $filePath = $this->write($scenario->exportJob);
 
         $rows = $this->readRows($filePath);
 
@@ -93,8 +92,7 @@ final class XlsxExportWriterTest extends KernelTestCase
         $scenario = $this->persistedTestObjects->adminWithOwnExportJob(ExportType::COMPANIES);
         $company = $scenario->admin->getCompany();
 
-        $writer = static::getContainer()->get(XlsxExportWriter::class);
-        $filePath = $writer->write($scenario->exportJob);
+        $filePath = $this->write($scenario->exportJob);
 
         $rows = $this->readRows($filePath);
 
@@ -110,6 +108,13 @@ final class XlsxExportWriterTest extends KernelTestCase
         ], $rows[1]);
 
         unlink($filePath);
+    }
+
+    private function write(ExportJob $job): string
+    {
+        $fileName = static::getContainer()->get(XlsxExportWriter::class)->write($job);
+
+        return static::getContainer()->get(ExportStorage::class)->pathOf($fileName);
     }
 
     /**

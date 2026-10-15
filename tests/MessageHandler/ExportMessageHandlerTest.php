@@ -2,10 +2,12 @@
 
 namespace App\Tests\MessageHandler;
 
+use App\Entity\ExportJob;
 use App\Enum\ExportStatus;
 use App\Enum\ExportType;
 use App\Message\ExportMessage;
 use App\MessageHandler\ExportMessageHandler;
+use App\Service\Export\ExportStorage;
 use App\Tests\PersistedTestObjects;
 use App\Tests\TestObjects;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,10 +39,10 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
         self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
-        self::assertNotNull($scenario->exportJob->getFilePath());
-        self::assertFileExists($scenario->exportJob->getFilePath());
+        self::assertNotNull($scenario->exportJob->getFileName());
+        self::assertFileExists($this->pathOf($scenario->exportJob));
 
-        unlink($scenario->exportJob->getFilePath());
+        unlink($this->pathOf($scenario->exportJob));
     }
 
     public function testHandlingCompaniesExportMarksJobAsReadyAndWritesFile(): void
@@ -51,10 +53,10 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
         self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
-        self::assertNotNull($scenario->exportJob->getFilePath());
-        self::assertFileExists($scenario->exportJob->getFilePath());
+        self::assertNotNull($scenario->exportJob->getFileName());
+        self::assertFileExists($this->pathOf($scenario->exportJob));
 
-        unlink($scenario->exportJob->getFilePath());
+        unlink($this->pathOf($scenario->exportJob));
     }
 
     public function testHandlingUsersExportFilteredByDocumentNumberOnlyWritesMatchingUsers(): void
@@ -64,7 +66,7 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler = static::getContainer()->get(ExportMessageHandler::class);
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
-        self::assertSame([$scenario->admin->getId()], array_column($this->readDataRows($scenario->exportJob->getFilePath()), 0));
+        self::assertSame([$scenario->admin->getId()], array_column($this->readDataRows($this->pathOf($scenario->exportJob)), 0));
     }
 
     public function testHandlingCompaniesExportFilteredByDocumentNumberOnlyWritesMatchingCompanies(): void
@@ -74,7 +76,7 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler = static::getContainer()->get(ExportMessageHandler::class);
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
-        self::assertSame(['30-71234567-1'], array_column($this->readDataRows($scenario->exportJob->getFilePath()), 4));
+        self::assertSame(['30-71234567-1'], array_column($this->readDataRows($this->pathOf($scenario->exportJob)), 4));
     }
 
     public function testHandlingTwoExportsOfTheSameTypeWritesDifferentFiles(): void
@@ -89,11 +91,11 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler(new ExportMessage($first->exportJob->getId()));
         $handler(new ExportMessage($secondJob->getId()));
 
-        self::assertNotSame($first->exportJob->getFilePath(), $secondJob->getFilePath());
-        self::assertStringContainsString('_' . $first->exportJob->getId() . '_', $first->exportJob->getFilePath());
+        self::assertNotSame($first->exportJob->getFileName(), $secondJob->getFileName());
+        self::assertStringContainsString('_' . $first->exportJob->getId() . '_', $first->exportJob->getFileName());
 
-        unlink($first->exportJob->getFilePath());
-        unlink($secondJob->getFilePath());
+        unlink($this->pathOf($first->exportJob));
+        unlink($this->pathOf($secondJob));
     }
 
     public function testHandlingExportThatFailsMarksJobAsFailedWithoutExposingTheError(): void
@@ -115,6 +117,11 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler(new ExportMessage(999999));
 
         $this->addToAssertionCount(1);
+    }
+
+    private function pathOf(ExportJob $job): string
+    {
+        return static::getContainer()->get(ExportStorage::class)->pathOf($job->getFileName());
     }
 
     /**

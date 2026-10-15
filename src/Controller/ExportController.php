@@ -8,6 +8,7 @@ use App\Enum\ExportStatus;
 use App\Exception\ExportNotReadyException;
 use App\Http\NotFoundMessage;
 use App\Security\Voter\ExportJobVoter;
+use App\Service\Export\ExportStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,18 +29,20 @@ final class ExportController extends AbstractController
 
     #[Route('/{exportJob}/download', name: 'export_download', methods: ['GET'])]
     #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: NotFoundMessage::EXPORT)]
-    public function download(ExportJob $exportJob): BinaryFileResponse
+    public function download(ExportJob $exportJob, ExportStorage $storage): BinaryFileResponse
     {
-        if ($exportJob->getStatus() !== ExportStatus::READY || !$exportJob->getFilePath()) {
+        $fileName = $exportJob->getFileName();
+
+        if ($exportJob->getStatus() !== ExportStatus::READY || !$fileName) {
             throw new ExportNotReadyException();
         }
 
-        $response = new BinaryFileResponse($exportJob->getFilePath(), 200, [
+        $response = new BinaryFileResponse($storage->pathOf($fileName), 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            basename($exportJob->getFilePath()),
+            $fileName,
         );
 
         return $response;

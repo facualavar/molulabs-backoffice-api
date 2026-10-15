@@ -28,8 +28,11 @@ class ExportJob
     #[ORM\Column(type: 'jsonb')]
     private array $filters;
 
+    /**
+     * Name of the file inside the export storage, not a path.
+     */
     #[ORM\Column(nullable: true)]
-    private ?string $filePath = null;
+    private ?string $fileName = null;
 
     #[ORM\Column(nullable: true)]
     private ?string $errorMessage = null;
@@ -79,9 +82,9 @@ class ExportJob
         return $this->filters;
     }
 
-    public function getFilePath(): ?string
+    public function getFileName(): ?string
     {
-        return $this->filePath;
+        return $this->fileName;
     }
 
     public function getErrorMessage(): ?string
@@ -109,10 +112,10 @@ class ExportJob
         $this->status = ExportStatus::PROCESSING;
     }
 
-    public function markAsReady(string $filePath): void
+    public function markAsReady(string $fileName): void
     {
         $this->status = ExportStatus::READY;
-        $this->filePath = $filePath;
+        $this->fileName = $fileName;
         $this->completedAt = new \DateTimeImmutable();
     }
 
