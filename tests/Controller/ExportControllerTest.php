@@ -3,6 +3,7 @@
 namespace App\Tests\Controller;
 
 use App\Tests\PersistedTestObjects;
+use App\Service\Export\ExportPurger;
 use App\Service\Export\ExportStorage;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -89,6 +90,25 @@ final class ExportControllerTest extends CustomWebTestCase
         self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=' . $fileName);
 
         unlink($filePath);
+    }
+
+    public function testDownloadingAnExportWhoseFileWasPurgedReturnsNotFound(): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithOwnExportJob();
+
+        $storage = static::getContainer()->get(ExportStorage::class);
+        $storage->prepare();
+        $fileName = 'export_test_' . uniqid() . '.xlsx';
+        file_put_contents($storage->pathOf($fileName), 'fake xlsx content');
+        $scenario->exportJob->markAsReady($fileName);
+        $this->entityManager->flush();
+
+        static::getContainer()->get(ExportPurger::class)->purgeCompletedBefore(new \DateTimeImmutable('+1 day'));
+        $this->loginAs($scenario->admin);
+
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId() . '/download');
+
+        self::assertResponseIsNotFound();
     }
 
     public function testDownloadingExportJobOwnedByAnotherUserReturnsNotFound(): void

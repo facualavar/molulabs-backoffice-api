@@ -119,6 +119,14 @@ class ExportJob
         $this->completedAt = new \DateTimeImmutable();
     }
 
+    /**
+     * The file was deleted to free space: the job stays READY but has nothing left to download.
+     */
+    public function discardFile(): void
+    {
+        $this->fileName = null;
+    }
+
     public function markAsFailed(string $errorMessage): void
     {
         $this->status = ExportStatus::FAILED;

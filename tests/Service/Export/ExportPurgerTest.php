@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Tests\Service\Export;
+
+use App\Entity\ExportJob;
+use App\Service\Export\ExportPurger;
+use App\Service\Export\ExportStorage;
+use App\Tests\PersistedTestObjects;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+final class ExportPurgerTest extends KernelTestCase
+{
+    private ?PersistedTestObjects $persistedTestObjects;
+
+    private ?EntityManagerInterface $entityManager;
+
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $this->persistedTestObjects = new PersistedTestObjects($this->entityManager);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->persistedTestObjects = null;
+        $this->entityManager = null;
+        parent::tearDown();
+    }
+
+    public function testPurgingDeletesTheFileOfAnExportCompletedBeforeTheLimit(): void
+    {
+        $job = $this->persistedTestObjects->adminWithOwnExportJob()->exportJob;
+        $path = $this->storeFileFor($job);
+
+        $deleted = $this->purger()->purgeCompletedBefore(new \DateTimeImmutable('+1 day'));
+
+        self::assertSame(1, $deleted);
+        self::assertFileDoesNotExist($path);
+        self::assertNull($job->getFileName());
+    }
+
+    public function testPurgingKeepsTheFileOfAnExportCompletedAfterTheLimit(): void
+    {
+        $job = $this->persistedTestObjects->adminWithOwnExportJob()->exportJob;
+        $path = $this->storeFileFor($job);
+
+        $deleted = $this->purger()->purgeCompletedBefore(new \DateTimeImmutable('-1 day'));
+
+        self::assertSame(0, $deleted);
+        self::assertFileExists($path);
+        self::assertNotNull($job->getFileName());
+
+        unlink($path);
+    }
+
+    public function testPurgingIgnoresAnExportWithoutFile(): void
+    {
+        $this->persistedTestObjects->adminWithOwnExportJob();
+
+        $deleted = $this->purger()->purgeCompletedBefore(new \DateTimeImmutable('+1 day'));
+
+        self::assertSame(0, $deleted);
+    }
+
+    private function purger(): ExportPurger
+    {
+        return static::getContainer()->get(ExportPurger::class);
+    }
+
+    private function storeFileFor(ExportJob $job): string
+    {
+        $storage = static::getContainer()->get(ExportStorage::class);
+        $storage->prepare();
+
+        $fileName = 'purge_test_' . uniqid() . '.xlsx';
+        $path = $storage->pathOf($fileName);
+        file_put_contents($path, 'fake xlsx content');
+
+        $job->markAsReady($fileName);
+        $this->entityManager->flush();
+
+        return $path;
+    }
+}
