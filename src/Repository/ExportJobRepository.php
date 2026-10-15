@@ -39,4 +39,20 @@ class ExportJobRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Exports a worker picked up before $before and never finished.
+     *
+     * @return list<ExportJob>
+     */
+    public function findProcessingStartedBefore(\DateTimeImmutable $before): array
+    {
+        return $this->createQueryBuilder('j')
+            ->andWhere('j.status = :status')
+            ->andWhere('j.startedAt < :before')
+            ->setParameter('status', ExportStatus::PROCESSING)
+            ->setParameter('before', $before)
+            ->getQuery()
+            ->getResult();
+    }
 }

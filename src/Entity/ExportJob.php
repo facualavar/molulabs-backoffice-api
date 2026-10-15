@@ -45,6 +45,9 @@ class ExportJob
     private readonly \DateTimeImmutable $createdAt;
 
     #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $startedAt = null;
+
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $completedAt = null;
 
     /**
@@ -102,6 +105,11 @@ class ExportJob
         return $this->createdAt;
     }
 
+    public function getStartedAt(): ?\DateTimeImmutable
+    {
+        return $this->startedAt;
+    }
+
     public function getCompletedAt(): ?\DateTimeImmutable
     {
         return $this->completedAt;
@@ -110,6 +118,7 @@ class ExportJob
     public function markAsProcessing(): void
     {
         $this->status = ExportStatus::PROCESSING;
+        $this->startedAt = new \DateTimeImmutable();
     }
 
     public function markAsReady(string $fileName): void

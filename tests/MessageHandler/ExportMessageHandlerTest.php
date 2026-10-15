@@ -38,6 +38,7 @@ final class ExportMessageHandlerTest extends KernelTestCase
         $handler(new ExportMessage($scenario->exportJob->getId()));
 
         self::assertSame(ExportStatus::READY, $scenario->exportJob->getStatus());
+        self::assertNotNull($scenario->exportJob->getStartedAt());
         self::assertNotNull($scenario->exportJob->getFileName());
         self::assertTrue($this->files()->exists($scenario->exportJob->getFileName()));
 
