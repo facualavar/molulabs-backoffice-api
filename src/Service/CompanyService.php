@@ -9,6 +9,7 @@ use App\Exception\DuplicateDocumentNumberException;
 use App\Exception\DuplicateEmailException;
 use App\Repository\CompanyRepository;
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CompanyService
@@ -50,7 +51,13 @@ final class CompanyService
         }
 
         $this->entityManager->remove($company);
-        $this->entityManager->flush();
+
+        // A user can still be created for the company between the check above and the delete.
+        try {
+            $this->entityManager->flush();
+        } catch (ForeignKeyConstraintViolationException) {
+            throw new CompanyHasUsersException();
+        }
     }
 
     private function assertIsUnique(Company $company): void

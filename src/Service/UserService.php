@@ -12,6 +12,7 @@ use App\Exception\DuplicateEmailException;
 use App\Exception\UserHasExportJobsException;
 use App\Repository\ExportJobRepository;
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class UserService
@@ -74,7 +75,13 @@ final class UserService
         }
 
         $this->entityManager->remove($user);
-        $this->entityManager->flush();
+
+        // An export can still be requested by the user between the check above and the delete.
+        try {
+            $this->entityManager->flush();
+        } catch (ForeignKeyConstraintViolationException) {
+            throw new UserHasExportJobsException();
+        }
     }
 
     private function assertAssignableRole(UserRole $role): void
