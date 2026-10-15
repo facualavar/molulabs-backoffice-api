@@ -91,11 +91,10 @@ final class XlsxExportWriter
         $name = $filters['name'] ?? null;
         $role = isset($filters['role']) ? UserRole::from($filters['role']) : null;
         $documentNumber = $filters['documentNumber'] ?? null;
-        $company = isset($filters['companyId']) ? $this->companyRepository->find($filters['companyId']) : null;
         $requestedBy = $job->getRequestedBy();
         $protectedUserId = $requestedBy->getId();
 
-        foreach ($this->userRepository->iterateByFilters($company, $name, $role, $documentNumber, $requestedBy->isSuperAdmin()) as $user) {
+        foreach ($this->userRepository->iterateByFilters($requestedBy, $name, $role, $documentNumber) as $user) {
             yield [
                 $user->getId(),
                 $user->getFirstname(),

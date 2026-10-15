@@ -153,14 +153,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return !$target->isSuperAdmin() && $target->company->getId() === $this->company->getId();
     }
 
-    /**
-     * The company a listing must be limited to: none for a superadmin, who sees every company.
-     */
-    public function getVisibleCompany(): ?Company
-    {
-        return $this->isSuperAdmin() ? null : $this->company;
-    }
-
     public function getPassword(): ?string
     {
         return $this->password;

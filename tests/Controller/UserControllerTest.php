@@ -280,13 +280,13 @@ final class UserControllerTest extends CustomWebTestCase
 
     public function testExportingUsersKeepsListFilters(): void
     {
-        $admin = $this->loginAsAdmin();
+        $this->loginAsAdmin();
 
         $this->postRequest('/api/users/export?name=Wanda&role=ROLE_USER&documentNumber=3011');
 
         self::assertResponseIsAccepted();
         self::assertSame(
-            ['name' => 'Wanda', 'role' => 'ROLE_USER', 'documentNumber' => '3011', 'companyId' => $admin->getCompany()->getId()],
+            ['name' => 'Wanda', 'role' => 'ROLE_USER', 'documentNumber' => '3011'],
             $this->findExportJob($this->getResponseContent()['id'])->getFilters(),
         );
     }

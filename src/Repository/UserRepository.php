@@ -22,9 +22,9 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function findByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber, int $page, int $limit, bool $includeSuperAdmins = true): PaginatedResult
+    public function findByFilters(User $viewer, ?string $name, ?UserRole $role, ?string $documentNumber, int $page, int $limit): PaginatedResult
     {
-        $queryBuilder = $this->buildFilteredQuery($company, $name, $role, $documentNumber, $includeSuperAdmins);
+        $queryBuilder = $this->buildFilteredQuery($viewer, $name, $role, $documentNumber);
 
         return $this->paginate($queryBuilder, 'u', $page, $limit);
     }
@@ -32,9 +32,9 @@ class UserRepository extends ServiceEntityRepository
     /**
      * @return iterable<User>
      */
-    public function iterateByFilters(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber = null, bool $includeSuperAdmins = true): iterable
+    public function iterateByFilters(User $viewer, ?string $name, ?UserRole $role, ?string $documentNumber = null): iterable
     {
-        return $this->buildFilteredQuery($company, $name, $role, $documentNumber, $includeSuperAdmins)
+        return $this->buildFilteredQuery($viewer, $name, $role, $documentNumber)
             ->orderBy('u.id', 'ASC')
             ->getQuery()
             ->toIterable();
@@ -63,17 +63,13 @@ class UserRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    private function buildFilteredQuery(?Company $company, ?string $name, ?UserRole $role, ?string $documentNumber, bool $includeSuperAdmins): QueryBuilder
+    private function buildFilteredQuery(User $viewer, ?string $name, ?UserRole $role, ?string $documentNumber): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('u')
             ->leftJoin('u.company', 'c')
             ->addSelect('c');
 
-        if ($company) {
-            $queryBuilder
-                ->andWhere('u.company = :company')
-                ->setParameter('company', $company);
-        }
+        $this->applyVisibility($queryBuilder, $viewer);
 
         if ($name) {
             $queryBuilder
@@ -93,12 +89,22 @@ class UserRepository extends ServiceEntityRepository
                 ->setParameter('documentNumber', '%' . $documentNumber . '%');
         }
 
-        if (!$includeSuperAdmins) {
-            $queryBuilder
-                ->andWhere('u.role != :excludedRole')
-                ->setParameter('excludedRole', UserRole::SUPERADMIN);
+        return $queryBuilder;
+    }
+
+    /**
+     * The query form of User::canManage(): keep both in step.
+     */
+    private function applyVisibility(QueryBuilder $queryBuilder, User $viewer): void
+    {
+        if ($viewer->isSuperAdmin()) {
+            return;
         }
 
-        return $queryBuilder;
+        $queryBuilder
+            ->andWhere('u.company = :viewerCompany')
+            ->andWhere('u.role != :superAdminRole')
+            ->setParameter('viewerCompany', $viewer->getCompany())
+            ->setParameter('superAdminRole', UserRole::SUPERADMIN);
     }
 }

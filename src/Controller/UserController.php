@@ -40,9 +40,7 @@ final class UserController extends AbstractController
     #[Route('', name: 'user_list', methods: ['GET'])]
     public function index(#[CurrentUser] User $currentUser, #[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
-        $company = $currentUser->getVisibleCompany();
-
-        $result = $this->userRepository->findByFilters($company, $filter->name, $filter->role, $filter->documentNumber, $filter->page, $filter->limit, $currentUser->isSuperAdmin());
+        $result = $this->userRepository->findByFilters($currentUser, $filter->name, $filter->role, $filter->documentNumber, $filter->page, $filter->limit);
 
         return $this->json(PaginatedResponse::fromResult(
             $result,
@@ -53,13 +51,10 @@ final class UserController extends AbstractController
     #[Route('/export', name: 'user_export', methods: ['POST'])]
     public function export(#[CurrentUser] User $currentUser, #[MapQueryString] UserFilterRequest $filter): JsonResponse
     {
-        $companyId = $currentUser->isSuperAdmin() ? null : $currentUser->getCompany()->getId();
-
         $job = $this->exportService->create(ExportType::USERS, [
             'name' => $filter->name,
             'role' => $filter->role?->value,
             'documentNumber' => $filter->documentNumber,
-            'companyId' => $companyId,
         ], $currentUser);
 
         return $this->json(ExportJobResponse::fromEntity($job), Response::HTTP_ACCEPTED);
