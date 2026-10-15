@@ -11,6 +11,7 @@ use App\Entity\Company;
 use App\Entity\User;
 use App\Enum\ExportType;
 use App\Exception\CompanyNotFoundException;
+use App\Http\NotFoundMessage;
 use App\Repository\CompanyRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\UserVoter;
@@ -61,7 +62,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{user}', name: 'user_show', methods: ['GET'])]
-    #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: 'User not found.')]
+    #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: NotFoundMessage::USER)]
     public function show(User $user): JsonResponse
     {
         return $this->json(UserResponse::fromEntity($user));
@@ -80,7 +81,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{user}', name: 'user_update', methods: ['PUT'])]
-    #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: 'User not found.')]
+    #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: NotFoundMessage::USER)]
     public function update(User $user, #[MapRequestPayload] UserRequest $request): JsonResponse
     {
         $user = $this->userService->update($user, $request->firstname, $request->lastname, $request->email, $request->documentNumber, $request->role);
@@ -89,7 +90,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{user}', name: 'user_delete', methods: ['DELETE'])]
-    #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: 'User not found.')]
+    #[IsGranted(UserVoter::ACCESS, subject: 'user', statusCode: 404, message: NotFoundMessage::USER)]
     public function delete(User $user, #[CurrentUser] User $currentUser): JsonResponse
     {
         $this->userService->delete($user, $currentUser);

@@ -405,4 +405,31 @@ final class CompanyControllerTest extends CustomWebTestCase
 
         self::assertResponseIsConflict();
     }
+
+    public function testCreatingCompanyWithBlankFieldsReturnsTheValidationMessages(): void
+    {
+        $this->loginAsSuperAdmin();
+
+        $this->postRequest('/api/companies', $this->companyPayload('', '', ['documentNumber' => '', 'phone' => '']));
+
+        self::assertSame([
+            'name' => 'El nombre no puede estar vacío.',
+            'email' => 'El email no puede estar vacío.',
+            'documentNumber' => 'El número de documento no puede estar vacío.',
+            'phone' => 'El teléfono no puede estar vacío.',
+        ], $this->getFieldErrorMessages());
+    }
+
+    public function testCreatingCompanyWithTooLongFieldsReturnsTheLengthMessages(): void
+    {
+        $this->loginAsSuperAdmin();
+
+        $this->postRequest('/api/companies', $this->companyPayload(str_repeat('a', 51), str_repeat('a', 90) . '@example.com', ['phone' => str_repeat('1', 21)]));
+
+        self::assertSame([
+            'name' => 'El nombre no puede tener más de 50 caracteres.',
+            'email' => 'El email no puede tener más de 100 caracteres.',
+            'phone' => 'El teléfono no puede tener más de 20 caracteres.',
+        ], $this->getFieldErrorMessages());
+    }
 }

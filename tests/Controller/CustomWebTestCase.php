@@ -104,6 +104,14 @@ abstract class CustomWebTestCase extends WebTestCase
     }
 
     /**
+     * @return array<string, string> the message of each field reported in the error response
+     */
+    protected function getFieldErrorMessages(): array
+    {
+        return array_column($this->getResponseContent()['errors'], 'message', 'field');
+    }
+
+    /**
      * The export endpoints only answer with the job; its stored filters are read back from here.
      */
     protected function findExportJob(int $id): ExportJob

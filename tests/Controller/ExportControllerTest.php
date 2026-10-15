@@ -96,4 +96,14 @@ final class ExportControllerTest extends CustomWebTestCase
 
         self::assertResponseIsNotFound();
     }
+
+    public function testShowingExportJobOwnedByAnotherUserRespondsWithTheNotFoundMessage(): void
+    {
+        $scenario = $this->persistedTestObjects->adminWithAnotherUsersExportJob();
+        $this->loginAs($scenario->admin);
+
+        $this->getRequest('/api/exports/' . $scenario->exportJob->getId());
+
+        self::assertStringContainsString('Exportación no encontrada.', $this->client->getResponse()->getContent());
+    }
 }

@@ -636,4 +636,72 @@ final class UserControllerTest extends CustomWebTestCase
 
         self::assertResponseIsOk();
     }
+
+    public function testCreatingUserWithBlankFieldsReturnsTheValidationMessages(): void
+    {
+        $this->loginAsAdmin();
+
+        $this->postRequest('/api/users', [
+            'firstname' => '',
+            'lastname' => '',
+            'email' => 'not-an-email',
+            'documentNumber' => '',
+            'password' => '',
+            'role' => 'ROLE_USER',
+        ]);
+
+        self::assertSame([
+            'firstname' => 'El nombre no puede estar vacío.',
+            'lastname' => 'El apellido no puede estar vacío.',
+            'email' => 'El email no es válido.',
+            'documentNumber' => 'El número de documento no puede estar vacío.',
+            'password' => 'La contraseña no puede estar vacía.',
+        ], $this->getFieldErrorMessages());
+    }
+
+    public function testCreatingUserWithBlankEmailReturnsTheBlankEmailMessage(): void
+    {
+        $this->loginAsAdmin();
+
+        $this->postRequest('/api/users', [
+            'firstname' => 'Wanda',
+            'lastname' => 'Maximoff',
+            'email' => '',
+            'documentNumber' => '30111222',
+            'password' => 'password',
+            'role' => 'ROLE_USER',
+        ]);
+
+        self::assertSame(['email' => 'El email no puede estar vacío.'], $this->getFieldErrorMessages());
+    }
+
+    public function testCreatingUserWithTooLongFieldsReturnsTheLengthMessages(): void
+    {
+        $this->loginAsAdmin();
+
+        $this->postRequest('/api/users', [
+            'firstname' => str_repeat('a', 51),
+            'lastname' => str_repeat('a', 51),
+            'email' => str_repeat('a', 90) . '@example.com',
+            'documentNumber' => '30111222',
+            'password' => 'password',
+            'role' => 'ROLE_USER',
+        ]);
+
+        self::assertSame([
+            'firstname' => 'El nombre no puede tener más de 50 caracteres.',
+            'lastname' => 'El apellido no puede tener más de 50 caracteres.',
+            'email' => 'El email no puede tener más de 100 caracteres.',
+        ], $this->getFieldErrorMessages());
+    }
+
+    public function testShowingUserFromAnotherCompanyRespondsWithTheNotFoundMessage(): void
+    {
+        $this->loginAsAdmin();
+        $otherCompanyUser = $this->persistedTestObjects->getUser();
+
+        $this->getRequest('/api/users/' . $otherCompanyUser->getId());
+
+        self::assertStringContainsString('Usuario no encontrado.', $this->client->getResponse()->getContent());
+    }
 }

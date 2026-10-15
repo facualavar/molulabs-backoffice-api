@@ -274,4 +274,35 @@ final class ProfileControllerTest extends CustomWebTestCase
     {
         static::getContainer()->get(EntityManagerInterface::class)->clear();
     }
+
+    public function testUpdatingOwnProfileWithBlankFieldsReturnsTheValidationMessages(): void
+    {
+        $this->loginAs($this->persistedTestObjects->getAdminUser());
+
+        $this->putRequest('/api/profile', [
+            'firstname' => '',
+            'lastname' => '',
+            'email' => '',
+            'documentNumber' => '',
+        ]);
+
+        self::assertSame([
+            'firstname' => 'El nombre no puede estar vacío.',
+            'lastname' => 'El apellido no puede estar vacío.',
+            'email' => 'El email no puede estar vacío.',
+            'documentNumber' => 'El número de documento no puede estar vacío.',
+        ], $this->getFieldErrorMessages());
+    }
+
+    public function testUpdatingPasswordWithBlankFieldsReturnsTheValidationMessages(): void
+    {
+        $this->loginAs($this->persistedTestObjects->getAdminUser());
+
+        $this->putRequest('/api/profile/password', ['currentPassword' => '', 'newPassword' => '']);
+
+        self::assertSame([
+            'currentPassword' => 'La contraseña actual no puede estar vacía.',
+            'newPassword' => 'La nueva contraseña no puede estar vacía.',
+        ], $this->getFieldErrorMessages());
+    }
 }

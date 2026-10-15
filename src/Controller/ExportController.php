@@ -6,6 +6,7 @@ use App\Dto\Export\ExportJobResponse;
 use App\Entity\ExportJob;
 use App\Enum\ExportStatus;
 use App\Exception\ExportNotReadyException;
+use App\Http\NotFoundMessage;
 use App\Security\Voter\ExportJobVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -19,14 +20,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class ExportController extends AbstractController
 {
     #[Route('/{exportJob}', name: 'export_show', methods: ['GET'])]
-    #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: 'Export not found.')]
+    #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: NotFoundMessage::EXPORT)]
     public function show(ExportJob $exportJob): JsonResponse
     {
         return $this->json(ExportJobResponse::fromEntity($exportJob));
     }
 
     #[Route('/{exportJob}/download', name: 'export_download', methods: ['GET'])]
-    #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: 'Export not found.')]
+    #[IsGranted(ExportJobVoter::ACCESS, subject: 'exportJob', statusCode: 404, message: NotFoundMessage::EXPORT)]
     public function download(ExportJob $exportJob): BinaryFileResponse
     {
         if ($exportJob->getStatus() !== ExportStatus::READY || !$exportJob->getFilePath()) {
