@@ -142,6 +142,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
+     * A superadmin manages everyone; any other user only the non-superadmins of their own company.
+     */
+    public function canManage(self $target): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return !$target->isSuperAdmin() && $target->company->getId() === $this->company->getId();
+    }
+
+    /**
      * The company a listing must be limited to: none for a superadmin, who sees every company.
      */
     public function getVisibleCompany(): ?Company

@@ -31,10 +31,6 @@ final class UserVoter extends Voter
             return false;
         }
 
-        if ($currentUser->isSuperAdmin()) {
-            return true;
-        }
-
-        return $subject->getCompany()->getId() === $currentUser->getCompany()->getId();
+        return $currentUser->canManage($subject);
     }
 }

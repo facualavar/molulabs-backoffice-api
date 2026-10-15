@@ -589,4 +589,51 @@ final class UserControllerTest extends CustomWebTestCase
 
         self::assertResponseIsConflict();
     }
+
+    public function testShowingSuperAdminFromOwnCompanyAsRegularAdminReturnsNotFound(): void
+    {
+        [$admin, $superAdmin] = $this->persistedTestObjects->adminWithSuperAdminCompanyMate();
+        $this->loginAs($admin);
+
+        $this->getRequest('/api/users/' . $superAdmin->getId());
+
+        self::assertResponseIsNotFound();
+    }
+
+    public function testUpdatingSuperAdminFromOwnCompanyAsRegularAdminReturnsNotFound(): void
+    {
+        [$admin, $superAdmin] = $this->persistedTestObjects->adminWithSuperAdminCompanyMate();
+        $this->loginAs($admin);
+
+        $this->putRequest('/api/users/' . $superAdmin->getId(), [
+            'firstname' => 'Updated',
+            'lastname' => $superAdmin->getLastname(),
+            'email' => $superAdmin->getEmail(),
+            'documentNumber' => $superAdmin->getDocumentNumber(),
+            'password' => 'password',
+            'role' => 'ROLE_SUPERADMIN',
+        ]);
+
+        self::assertResponseIsNotFound();
+    }
+
+    public function testDeletingSuperAdminFromOwnCompanyAsRegularAdminReturnsNotFound(): void
+    {
+        [$admin, $superAdmin] = $this->persistedTestObjects->adminWithSuperAdminCompanyMate();
+        $this->loginAs($admin);
+
+        $this->deleteRequest('/api/users/' . $superAdmin->getId());
+
+        self::assertResponseIsNotFound();
+    }
+
+    public function testShowingAnotherSuperAdminAsSuperAdminReturnsOk(): void
+    {
+        [$superAdmin, $otherSuperAdmin] = $this->persistedTestObjects->twoSuperAdmins();
+        $this->loginAs($superAdmin);
+
+        $this->getRequest('/api/users/' . $otherSuperAdmin->getId());
+
+        self::assertResponseIsOk();
+    }
 }
