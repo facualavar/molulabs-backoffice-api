@@ -342,6 +342,24 @@ final class CompanyControllerTest extends CustomWebTestCase
         self::assertSame('12345678', $content['documentNumber']);
     }
 
+    public function testUpdatingCompanyKeepingItsEmailAndDocumentNumberReturnsUpdatedData(): void
+    {
+        $this->loginAsSuperAdmin();
+        $company = $this->persistedTestObjects->getCompany();
+
+        $this->putRequest('/api/companies/' . $company->getId(), $this->companyPayload('Updated Name', $company->getEmail(), [
+            'documentType' => $company->getDocumentType()->value,
+            'documentNumber' => $company->getDocumentNumber(),
+        ]));
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame('Updated Name', $content['name']);
+        self::assertSame($company->getEmail(), $content['email']);
+        self::assertSame($company->getDocumentNumber(), $content['documentNumber']);
+    }
+
     public function testUpdatingOwnCompanyAsLoggedInSuperAdminReturnsUpdatedData(): void
     {
         $superAdmin = $this->persistedTestObjects->getSuperAdminUser();

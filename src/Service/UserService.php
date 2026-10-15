@@ -16,13 +16,12 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class UserService
 {
-    use FlushesUniqueFields;
-
     public function __construct(
         private EntityManagerInterface $entityManager,
         private AuthService $authService,
         private UserRepository $userRepository,
         private ExportJobRepository $exportJobRepository,
+        private UniqueValueGuard $uniqueValues,
     ) {}
 
     public function create(Company $company, string $firstname, string $lastname, string $email, string $documentNumber, string $password, UserRole $role): User
@@ -32,8 +31,7 @@ final class UserService
         $user = new User($company, $firstname, $lastname, $email, $documentNumber, $password, $role);
         $user->setPassword($this->authService->hashPassword($user, $password));
 
-        $this->assertDocumentNumberIsUnique($user);
-        $this->assertEmailIsUnique($user);
+        $this->assertIsUnique($user);
 
         $this->entityManager->persist($user);
         $this->flushRejectingDuplicates($user);
@@ -53,8 +51,7 @@ final class UserService
         $user->setDocumentNumber($documentNumber);
         $user->setRole($role);
 
-        $this->assertDocumentNumberIsUnique($user);
-        $this->assertEmailIsUnique($user);
+        $this->assertIsUnique($user);
 
         $this->flushRejectingDuplicates($user);
 
@@ -91,27 +88,23 @@ final class UserService
         }
     }
 
-    private function assertDocumentNumberIsUnique(User $user): void
+    private function assertIsUnique(User $user): void
     {
-        $existing = $this->userRepository->findOneByDocumentNumber($user->getDocumentNumber());
-
-        if ($existing && $existing->getId() !== $user->getId()) {
-            throw new DuplicateDocumentNumberException($user->getDocumentNumber());
-        }
-    }
-
-    private function assertEmailIsUnique(User $user): void
-    {
-        $existing = $this->userRepository->findOneByEmail($user->getEmail());
-
-        if ($existing && $existing->getId() !== $user->getId()) {
-            throw new DuplicateEmailException($user->getEmail());
-        }
+        $this->uniqueValues->assertFree(
+            $this->userRepository->findOneByDocumentNumber($user->getDocumentNumber()),
+            $user,
+            fn () => new DuplicateDocumentNumberException($user->getDocumentNumber()),
+        );
+        $this->uniqueValues->assertFree(
+            $this->userRepository->findOneByEmail($user->getEmail()),
+            $user,
+            fn () => new DuplicateEmailException($user->getEmail()),
+        );
     }
 
     private function flushRejectingDuplicates(User $user): void
     {
-        $this->flushUnique($this->entityManager, [
+        $this->uniqueValues->flush([
             User::EMAIL_UNIQUE => fn () => new DuplicateEmailException($user->getEmail()),
             User::DOCUMENT_NUMBER_UNIQUE => fn () => new DuplicateDocumentNumberException($user->getDocumentNumber()),
         ]);

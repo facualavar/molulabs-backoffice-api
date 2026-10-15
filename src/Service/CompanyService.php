@@ -13,20 +13,18 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class CompanyService
 {
-    use FlushesUniqueFields;
-
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CompanyRepository $companyRepository,
         private UserRepository $userRepository,
+        private UniqueValueGuard $uniqueValues,
     ) {}
 
     public function create(string $name, string $email, DocumentType $documentType, string $documentNumber, string $phone): Company
     {
         $company = new Company($name, $email, $documentType, $documentNumber, $phone);
 
-        $this->assertDocumentNumberIsUnique($company);
-        $this->assertEmailIsUnique($company);
+        $this->assertIsUnique($company);
 
         $this->entityManager->persist($company);
         $this->flushRejectingDuplicates($company);
@@ -41,8 +39,7 @@ final class CompanyService
         $company->setDocument($documentType, $documentNumber);
         $company->setPhone($phone);
 
-        $this->assertDocumentNumberIsUnique($company);
-        $this->assertEmailIsUnique($company);
+        $this->assertIsUnique($company);
 
         $this->flushRejectingDuplicates($company);
 
@@ -59,27 +56,23 @@ final class CompanyService
         $this->entityManager->flush();
     }
 
-    private function assertDocumentNumberIsUnique(Company $company): void
+    private function assertIsUnique(Company $company): void
     {
-        $existing = $this->companyRepository->findOneByDocumentNumber($company->getDocumentNumber());
-
-        if ($existing && $existing->getId() !== $company->getId()) {
-            throw new DuplicateDocumentNumberException($company->getDocumentNumber());
-        }
-    }
-
-    private function assertEmailIsUnique(Company $company): void
-    {
-        $existing = $this->companyRepository->findOneByEmail($company->getEmail());
-
-        if ($existing && $existing->getId() !== $company->getId()) {
-            throw new DuplicateEmailException($company->getEmail());
-        }
+        $this->uniqueValues->assertFree(
+            $this->companyRepository->findOneByDocumentNumber($company->getDocumentNumber()),
+            $company,
+            fn () => new DuplicateDocumentNumberException($company->getDocumentNumber()),
+        );
+        $this->uniqueValues->assertFree(
+            $this->companyRepository->findOneByEmail($company->getEmail()),
+            $company,
+            fn () => new DuplicateEmailException($company->getEmail()),
+        );
     }
 
     private function flushRejectingDuplicates(Company $company): void
     {
-        $this->flushUnique($this->entityManager, [
+        $this->uniqueValues->flush([
             Company::EMAIL_UNIQUE => fn () => new DuplicateEmailException($company->getEmail()),
             Company::DOCUMENT_NUMBER_UNIQUE => fn () => new DuplicateDocumentNumberException($company->getDocumentNumber()),
         ]);

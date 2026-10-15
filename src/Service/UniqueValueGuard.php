@@ -5,8 +5,22 @@ namespace App\Service;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
-trait FlushesUniqueFields
+final class UniqueValueGuard
 {
+    public function __construct(private EntityManagerInterface $entityManager) {}
+
+    /**
+     * Throws when $existing is an entity other than $self: the value is already taken.
+     *
+     * @param callable(): \Throwable $duplicate
+     */
+    public function assertFree(?object $existing, object $self, callable $duplicate): void
+    {
+        if ($existing !== null && $existing->getId() !== $self->getId()) {
+            throw $duplicate();
+        }
+    }
+
     /**
      * The lookup done before flushing catches the usual duplicate, but two requests can both pass it
      * and race to insert the same value. The loser hits the unique index: turn that violation into
@@ -14,10 +28,10 @@ trait FlushesUniqueFields
      *
      * @param array<string, callable(): \Throwable> $exceptionsByConstraint keyed by unique constraint name
      */
-    private function flushUnique(EntityManagerInterface $entityManager, array $exceptionsByConstraint): void
+    public function flush(array $exceptionsByConstraint): void
     {
         try {
-            $entityManager->flush();
+            $this->entityManager->flush();
         } catch (UniqueConstraintViolationException $violation) {
             foreach ($exceptionsByConstraint as $constraint => $newException) {
                 if (str_contains($violation->getMessage(), '"' . $constraint . '"')) {

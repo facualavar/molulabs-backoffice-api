@@ -485,6 +485,26 @@ final class UserControllerTest extends CustomWebTestCase
         self::assertSame('updated@company.com', $content['email']);
     }
 
+    public function testUpdatingUserKeepingItsEmailAndDocumentNumberReturnsUpdatedData(): void
+    {
+        $user = $this->loginAsAdmin();
+
+        $this->putRequest('/api/users/' . $user->getId(), [
+            'firstname' => 'Updated',
+            'lastname' => $user->getLastname(),
+            'email' => $user->getEmail(),
+            'documentNumber' => $user->getDocumentNumber(),
+            'password' => 'password',
+            'role' => 'ROLE_ADMIN',
+        ]);
+
+        self::assertResponseIsOk();
+
+        $content = $this->getResponseContent();
+        self::assertSame('Updated', $content['firstname']);
+        self::assertSame($user->getEmail(), $content['email']);
+    }
+
     public function testUpdatingUserFromAnotherCompanyReturnsNotFound(): void
     {
         $this->loginAsAdmin();
