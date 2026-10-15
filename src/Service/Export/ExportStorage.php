@@ -2,6 +2,7 @@
 
 namespace App\Service\Export;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -10,7 +11,9 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 final class ExportStorage
 {
-    public function __construct(private readonly string $exportDirectory) {}
+    public function __construct(
+        #[Autowire('%app.export_directory%')] private readonly string $exportDirectory,
+    ) {}
 
     public function pathOf(string $fileName): string
     {
